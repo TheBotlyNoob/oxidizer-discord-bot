@@ -2,5 +2,5 @@
   "watch": ["**/*.ts"],
   "ext": "*",
   "ignore": ["dist"],
-  "exec": "tsc && node dist/index.js"
+  "exec": "node node_modules/ttypescript/bin/tsc && node dist/index.js"
 }

@@ -1,24 +1,27 @@
-import { MessageEmbed } from 'discord.js';
-import { Command } from 'index';
-import Embed from 'utils/embed';
+import { Command } from '@/index';
+import embed from '@/utils/embed';
 
 export default new Command({
   name: 'help',
-  description: 'The help command',
+  description: 'Commands And Their Descriptions',
   aliases: ['commands'],
-  run: (_, __, interaction) =>
+  run: (client, __, interaction) => {
     interaction.reply({
       embeds: [
-        new MessageEmbed()
-          .setAuthor(
-            interaction.user.tag,
-            interaction.user.displayAvatarURL({ dynamic: true })
-          )
-          .setTitle('Help Menu')
-          .setDescription(
-            'The Help Menu, Contains All The Commands And Their Names.'
-          )
-          .setTimestamp()
+        embed({
+          title: 'Help Menu',
+          description: 'Commands And Their Descriptions',
+          fields: client.commands
+            .filter((command) => !command.isAlias)
+            .map((command) => ({
+              name: command.name,
+              value: `${command.description}\nAliases: ${command.aliases.join(
+                ', '
+              )}`
+            })),
+          user: interaction.user
+        })
       ]
-    })
+    });
+  }
 });

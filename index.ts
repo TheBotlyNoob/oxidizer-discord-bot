@@ -88,6 +88,15 @@ export class Command {
                 .setDescription(userOption.description)
                 .setRequired(Boolean(userOption.isRequired));
 
+              (option.addChoices instanceof Function
+                ? option.addChoices
+                : (_: [name: string, value: string][]) => _)(
+                (userOption.choices || []).map((choice) => [
+                  choice.name,
+                  choice.value
+                ])
+              );
+
               return opt;
             });
           });

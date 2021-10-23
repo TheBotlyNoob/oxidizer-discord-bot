@@ -18,46 +18,38 @@ new Command({
       description: 'The Reason You Are Banning The User',
       type: 'STRING',
       isRequired: true
-    },
-    {
-      name: 'days',
-      description: 'The Ammount Of Days To Ban The User',
-      type: 'INTEGER'
     }
   ],
   run: async (_, __, interaction) => {
     let user = interaction.options.getUser('user');
-    let days = interaction.options.getInteger('days');
     let reason = interaction.options.getString('reason');
     let member = await interaction.guild.members.fetch(user);
 
-    if (!interaction.memberPermissions.has(Permissions.FLAGS.BAN_MEMBERS))
+    if (!interaction.memberPermissions.has(Permissions.FLAGS.KICK_MEMBERS))
       return await interaction.reply({
-        content: 'You Do Not Have Permission To Ban Members',
+        content: 'You Do Not Have Permission To Kick Members',
         ephemeral: true
       });
-    else if (!member.bannable)
+    else if (!member.kickable)
       return await interaction.reply({
         embeds: [
           embed({
-            title: 'Cannot Ban This User',
-            description: `You Are Not Able To Ban ${userMention(user.id)}`,
+            title: 'Cannot Kick This User',
+            description: `You Are Not Able To Kick ${userMention(user.id)}`,
             user: interaction.user,
             isError: true
           })
         ]
       });
 
-    await member.ban({ days, reason });
+    await member.kick(reason);
 
     try {
       await user.send({
         embeds: [
           embed({
-            title: 'You Were Banned',
-            description: `You Were Banned From: ${interaction.guild.name} ${
-              days ? `For ${days} Days` : ''
-            }, For: ${reason}`,
+            title: 'You Were Kicked',
+            description: `You Were Kicked From: ${interaction.guild.name}, For: ${reason}`,
             user: interaction.user,
             isError: true
           })
@@ -68,8 +60,8 @@ new Command({
     await interaction.reply({
       embeds: [
         embed({
-          title: 'Banned User',
-          description: `Sucessfully Banned User: ${user.tag}`,
+          title: 'Kicked User',
+          description: `Sucessfully Kicked User: ${user.tag}`,
           user: interaction.user
         })
       ],

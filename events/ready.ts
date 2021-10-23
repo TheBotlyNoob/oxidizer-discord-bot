@@ -16,6 +16,5 @@ export default async (client: Client) => {
         command.aliases ? command.aliases.join(', ') : 'No Aliases'
       )
     );
-  console.log();
-  console.log(table.toString());
+  console.log(`\n${table.toString()}`);
 };

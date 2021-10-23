@@ -5,7 +5,7 @@ new Command({
   name: 'help',
   description: 'Commands And Their Descriptions',
   aliases: ['commands'],
-  run: async (client, __, interaction) => {
+  run: async (client, _, interaction) => {
     await interaction.reply({
       embeds: [
         embed({

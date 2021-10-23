@@ -57,14 +57,11 @@ async function main(client: Client, rest: REST) {
     }
   });
 
-  await rest.put(
-    Routes.applicationGuildCommands(clientId, '900561863094460497'),
-    {
-      body: client.commands.map((command: _command) =>
-        command.slashCommand.toJSON()
-      )
-    }
-  );
+  await rest.put(Routes.applicationCommands(clientId), {
+    body: client.commands.map((command: _command) =>
+      command.slashCommand.toJSON()
+    )
+  });
 
   client.login(token);
 }

@@ -1,12 +1,12 @@
-import { Command } from '@/index';
+import { Command } from '@';
 import embed from '@/utils/embed';
 
-export default new Command({
+new Command({
   name: 'help',
   description: 'Commands And Their Descriptions',
   aliases: ['commands'],
-  run: (client, __, interaction) => {
-    interaction.reply({
+  run: async (client, __, interaction) => {
+    await interaction.reply({
       embeds: [
         embed({
           title: 'Help Menu',
@@ -15,9 +15,11 @@ export default new Command({
             .filter((command) => !command.isAlias)
             .map((command) => ({
               name: command.name,
-              value: `${command.description}\nAliases: ${command.aliases.join(
-                ', '
-              )}`
+              value: `${command.description}\nAliases: ${
+                command.aliases
+                  ? command.aliases.join(', ')
+                  : 'There Are No Aliases'
+              }`
             })),
           user: interaction.user
         })

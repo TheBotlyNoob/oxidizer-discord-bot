@@ -17,7 +17,8 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*", "dist/*"]
+      "@/*": ["*"],
+      "@": ["index"]
     },
     "plugins": [
       { "transform": "typescript-transform-paths" },

@@ -58,7 +58,7 @@ new Command({
             description: `You Were Banned From: ${interaction.guild.name} ${
               days ? `For ${days} Days` : ''
             }, For: ${reason}`,
-            user: interaction.user,
+            user,
             isError: true
           })
         ]
@@ -69,7 +69,7 @@ new Command({
       embeds: [
         embed({
           title: 'Banned User',
-          description: `Sucessfully Banned User: ${user.tag}`,
+          description: `Sucessfully Banned User: ${user.tag}, For ${reason}`,
           user: interaction.user
         })
       ],

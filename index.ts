@@ -19,7 +19,7 @@ import { token, clientId } from '@/config.json';
 
 process.chdir(__dirname);
 
-async function main() {
+async function main(client: Client, rest: REST) {
   (await glob('commands/**/*.js')).map((command: string) =>
     require(`${__dirname}/${command}`)
   );
@@ -28,7 +28,7 @@ async function main() {
     require(`${__dirname}/${handler}`)
   );
 
-  client.once('ready', onReady);
+  client.once('ready', () => onReady(client));
 
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isCommand()) return;
@@ -171,4 +171,4 @@ export interface _command extends command {
 const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
 const rest = new REST({ version: '9' }).setToken(token);
 
-main();
+main(client, rest);

@@ -1,0 +1,22 @@
+import glob from 'fast-glob';
+import ascii from 'ascii-table';
+import { client, imp, root } from '@';
+
+export default async () => {
+  (await glob('commands/**/*.js')).map((command: string) =>
+    imp(`${root}/${command}`)()
+  );
+
+  const table = new ascii('Commands');
+  table.setHeading('Command', 'Descriptions', 'Aliases');
+  client.commands
+    .filter((command) => !command.isAlias)
+    .map((command) =>
+      table.addRow(
+        command.name,
+        command.description,
+        command.aliases ? command.aliases.join(', ') : 'No Aliases'
+      )
+    );
+  console.log(`\n${table.toString()}\n`);
+};

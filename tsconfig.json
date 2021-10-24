@@ -18,14 +18,16 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["*"],
-      "@": ["index"]
+      "@": ["index"],
+      "@types": ["utils/types"],
+      "@embed": ["utils/embed"]
     },
     "plugins": [
       { "transform": "typescript-transform-paths" },
       { "transform": "typescript-transform-paths", "afterDeclarations": true }
     ]
   },
-  "exclude": ["node_modules", "dist", "**/*.d.ts"],
+  "exclude": ["node_modules", "commands/moderation/dist", "**/*.d.ts"],
   "include": [
     "index.ts",
     "events/**/*.ts",

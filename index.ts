@@ -1,31 +1,24 @@
-import {
-  Client as _Client,
-  Collection,
-  Intents,
-  CommandInteraction
-} from 'discord.js';
+import { Intents } from 'discord.js';
 import glob from 'fast-glob';
 import onReady from '@/events/ready.js';
-import embed from '@/utils/embed';
-import {
-  SlashCommandBuilder,
-  SlashCommandStringOption,
-  codeBlock,
-  userMention
-} from '@discordjs/builders';
+import embed from '@embed';
+import { codeBlock, userMention } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
+import { Client, _command } from '@types';
 import { token, clientId } from '@/config.json';
 
 process.chdir(__dirname);
 
-async function main(client: Client, rest: REST) {
-  (await glob('commands/**/*.js')).map((command: string) =>
-    require(`${__dirname}/${command}`)
-  );
-
-  (await glob('handlers/**/*.js')).map(async (handler: string) =>
-    require(`${__dirname}/${handler}`)
+async function main(
+  client: Client,
+  rest: REST,
+  require: (path: string) => any
+) {
+  await Promise.all(
+    (
+      await glob('handlers/**/*.js')
+    ).map(async (handler: string) => require(`${__dirname}/${handler}`)())
   );
 
   client.once('ready', () => onReady(client));
@@ -66,115 +59,19 @@ async function main(client: Client, rest: REST) {
   client.login(token);
 }
 
-export class Command {
-  constructor(command: command) {
-    [
-      {
-        ...command,
-        isAlias: false,
-        slashCommand: ((command: command) => {
-          let cmd = new SlashCommandBuilder()
-            .setName(command.name)
-            .setDescription(command.description);
+export function default_require(path: string): any {
+  let required_item = require(path);
 
-          (command.options || []).map((userOption) => {
-            cmd[
-              `add${userOption.type.replace(/./g, (m, i) =>
-                i === 0 ? m.toUpperCase() : m.toLowerCase()
-              )}Option`
-            ]((option: SlashCommandStringOption) => {
-              let opt = option
-                .setName(userOption.name)
-                .setDescription(userOption.description)
-                .setRequired(Boolean(userOption.isRequired));
-
-              // (option.addChoices instanceof Function
-              //   ? option.addChoices
-              //   : (_: [name: string, value: string][]) => _)(
-              //   (userOption.choices || []).map((choice) => [
-              //     choice.name,
-              //     choice.value
-              //   ])
-              // );
-
-              return opt;
-            });
-          });
-
-          return cmd;
-        })(command)
-      },
-      ...(command.aliases || []).map((alias: string) => ({
-        ...command,
-        name: alias,
-        isAlias: true,
-        slashCommand: ((command: command) => {
-          let cmd = new SlashCommandBuilder()
-            .setName(alias)
-            .setDescription(command.description);
-
-          (command.options || []).map((userOption) => {
-            cmd[
-              `add${userOption.type.replace(/./g, (m, i) =>
-                i === 0 ? m.toUpperCase() : m.toLowerCase()
-              )}Option`
-            ]((option: SlashCommandStringOption) => {
-              let opt = option
-                .setName(userOption.name)
-                .setDescription(userOption.description)
-                .setRequired(Boolean(userOption.isRequired));
-
-              return opt;
-            });
-          });
-
-          return cmd;
-        })(command)
-      }))
-    ].map((command: _command) => {
-      client.commands.set(command.name, command);
-    });
-  }
+  return required_item.default ?? required_item;
 }
 
-export class Client extends _Client {
-  commands: Collection<string, _command> = new Collection();
+export const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+export const rest = new REST({ version: '9' }).setToken(token);
+export function imp(path: string): any {
+  let required_item = require(path);
+
+  return required_item?.default ?? required_item;
 }
+export const root = __dirname;
 
-export interface command {
-  name: string;
-  description: string;
-  aliases?: string[];
-  options?: {
-    name: string;
-    description: string;
-    isRequired?: boolean;
-    type:
-      | 'STRING'
-      | 'INTEGER'
-      | 'NUMBER'
-      | 'BOOLEAN'
-      | 'USER'
-      | 'CHANNEL'
-      | 'ROLE'
-      | 'MENTIONABLE';
-    choices?: {
-      name: string;
-      value: any;
-    }[];
-  }[];
-  run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
-}
-
-export interface _command extends command {
-  slashCommand: Omit<
-    SlashCommandBuilder,
-    'addSubcommand' | 'addSubcommandGroup'
-  >;
-  isAlias: boolean;
-}
-
-const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
-const rest = new REST({ version: '9' }).setToken(token);
-
-main(client, rest);
+main(client, rest, imp);

@@ -1,10 +1,10 @@
 import glob from 'fast-glob';
 import ascii from 'ascii-table';
-import { client, imp, root } from '@';
+import { client, imp, dist } from '@';
 
 export default async () => {
   (await glob('commands/**/*.js')).map((command: string) =>
-    imp(`${root}/${command}`)()
+    imp(`${dist}/${command}`)()
   );
 
   const table = new ascii('Commands');

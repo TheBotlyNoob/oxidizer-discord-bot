@@ -1,6 +1,6 @@
-import { Command } from '@types';
-import rand from '@/utils/rand';
-import embed from '@embed';
+import { Command } from '@/types';
+import rand from '@/rand';
+import embed from '@/embed';
 
 export default () =>
   new Command({

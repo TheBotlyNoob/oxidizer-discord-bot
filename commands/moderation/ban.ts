@@ -1,7 +1,7 @@
-import { Command } from '@types';
+import { Command } from '@/types';
 import { Permissions } from 'discord.js';
 import { userMention } from '@discordjs/builders';
-import embed from '@embed';
+import embed from '@/embed';
 
 export default () =>
   new Command({

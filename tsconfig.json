@@ -17,12 +17,8 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@": ["index"],
-      "@types": ["utils/types"],
-      "@embed": ["utils/embed"],
-      "@graphql": ["utils/graphql"],
-      "@log": ["utils/log"]
+      "@/*": ["*", "utils/*"],
+      "@": ["index"]
     },
     "plugins": [
       { "transform": "typescript-transform-paths" },

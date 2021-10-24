@@ -1,10 +1,16 @@
-import { Client as _Client, Collection, CommandInteraction } from 'discord.js';
+import {
+  Client as _Client,
+  Collection as _Collection,
+  CommandInteraction
+} from 'discord.js';
 import {
   SlashCommandBuilder,
   SlashCommandStringOption
 } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { client } from '@';
+import { readFileSync, writeFileSync } from 'fs-extra';
+import exitHook from '@/exit-hook';
 
 export class Command {
   constructor(command: command) {
@@ -79,7 +85,7 @@ export class Command {
 
 export class Client extends _Client {
   commands: Collection<string, _command> = new Collection();
-  db: any;
+  db: DB;
 }
 
 export interface command {
@@ -115,6 +121,32 @@ export interface _command extends command {
   isAlias: boolean;
 }
 
-export class GraphQLQuery {
-  constructor(query: any) {}
+export class Collection<K, V> extends _Collection<K, V> {
+  toJSON(): any {
+    return Object.fromEntries(this);
+  }
+
+  defaultGet(key: K, defaultValue?: V): V {
+    return this.get(key) ?? defaultValue;
+  }
+}
+
+export class DB extends Collection<string, unknown> {
+  constructor(file: string) {
+    super();
+
+    for (const [key, value] of Object.entries(
+      (() => {
+        try {
+          return JSON.parse(readFileSync(file, 'utf-8'));
+        } catch {
+          writeFileSync(file, '{}');
+          return {};
+        }
+      })()
+    ))
+      this.set(key, value);
+    this.get;
+    exitHook(() => writeFileSync(file, JSON.stringify(this.toJSON())));
+  }
 }

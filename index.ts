@@ -1,13 +1,14 @@
 import { Intents } from 'discord.js';
 import glob from 'fast-glob';
 import onReady from '@/events/ready.js';
-import embed from '@embed';
+import embed from '@/embed';
 import { codeBlock, userMention } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
-import { Client, _command } from '@types';
+import { Client, _command } from '@/types';
 import { token, clientId } from '@/config.json';
-import log from '@log';
+import log from '@/log';
+import { resolve } from 'node:path';
 
 process.chdir(__dirname);
 
@@ -41,7 +42,7 @@ async function main(
             title: 'Error',
             description: `Failed To Execute The Command!\nPlease DM Me About This Error At ${userMention(
               '488802888928329753'
-            )}\n${codeBlock(String(error))}`,
+            )}\n${codeBlock('diff', `! ${String(error)} !`)}`,
             user: interaction.user,
             isError: true
           })
@@ -74,6 +75,7 @@ export function imp(path: string): any {
 
   return required_item?.default ?? required_item;
 }
-export const root = __dirname;
+export const dist = __dirname;
+export const root = resolve(__dirname, '..');
 
 main(client, rest, imp);

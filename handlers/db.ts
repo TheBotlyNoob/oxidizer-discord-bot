@@ -1,4 +1,4 @@
-import { client, root } from '@';
-import watch from 'node-watch';
+import { DB } from '@/types';
+import { root, client } from '@';
 
-export default () => {};
+export default () => (client.db = new DB(`${root}/db.json`));

@@ -1,9 +1,9 @@
-import { Database } from 'sqlite3';
+import { createClient } from 'redis';
 import { pathExists, open } from 'fs-extra';
 import { root, client } from '@';
 
 export default async () => {
-  if (!(await pathExists(`${root}/db.sql`))) await open(`${root}/db.sql`, 'w+');
+  const redisClient = createClient();
 
-  client.db = new Database(`${root}/db.sql`);
+  redisClient.on('error', (err) => console.error(err));
 };

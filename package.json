@@ -19,11 +19,11 @@
     "discord.js": "^13.2.0",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
-    "sqlite3": "^5.0.2"
+    "redis": "^3.1.2"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
-    "@types/sqlite3": "^3.1.7",
+    "@types/redis": "^2.8.32",
     "nodemon": "^2.0.14",
     "ttypescript": "^1.5.12",
     "typescript-transform-paths": "^3.3.1"

@@ -5,7 +5,7 @@ import {
 } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { client } from '@';
-import { Database } from 'sqlite3';
+import { RedisClient } from 'redis';
 
 export class Command {
   constructor(command: command) {
@@ -80,7 +80,7 @@ export class Command {
 
 export class Client extends _Client {
   commands: Collection<string, _command> = new Collection();
-  db: Database;
+  db: RedisClient;
 }
 
 export interface command {

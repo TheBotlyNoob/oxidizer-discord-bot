@@ -5,7 +5,6 @@ import {
 } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { client } from '@';
-import { RedisClient } from 'redis';
 
 export class Command {
   constructor(command: command) {
@@ -80,7 +79,7 @@ export class Command {
 
 export class Client extends _Client {
   commands: Collection<string, _command> = new Collection();
-  db: RedisClient;
+  db: any;
 }
 
 export interface command {
@@ -114,4 +113,8 @@ export interface _command extends command {
     'addSubcommand' | 'addSubcommandGroup'
   >;
   isAlias: boolean;
+}
+
+export class GraphQLQuery {
+  constructor(query: any) {}
 }

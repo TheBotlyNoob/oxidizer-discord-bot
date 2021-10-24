@@ -7,6 +7,7 @@ import { REST } from '@discordjs/rest';
 import { Routes } from 'discord-api-types/v9';
 import { Client, _command } from '@types';
 import { token, clientId } from '@/config.json';
+import log from '@log';
 
 process.chdir(__dirname);
 
@@ -56,6 +57,7 @@ async function main(
     )
   });
 
+  log.debug(`Token: ${token}`);
   client.login(token);
 }
 

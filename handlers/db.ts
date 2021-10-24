@@ -1,9 +1,4 @@
-import { createClient } from 'redis';
-import { pathExists, open } from 'fs-extra';
-import { root, client } from '@';
+import { client, root } from '@';
+import watch from 'node-watch';
 
-export default async () => {
-  const redisClient = createClient();
-
-  redisClient.on('error', (err) => console.error(err));
-};
+export default () => {};

@@ -20,16 +20,19 @@
       "@/*": ["*"],
       "@": ["index"],
       "@types": ["utils/types"],
-      "@embed": ["utils/embed"]
+      "@embed": ["utils/embed"],
+      "@graphql": ["utils/graphql"],
+      "@log": ["utils/log"]
     },
     "plugins": [
       { "transform": "typescript-transform-paths" },
       { "transform": "typescript-transform-paths", "afterDeclarations": true }
     ]
   },
-  "exclude": ["node_modules", "commands/moderation/dist", "**/*.d.ts"],
+  "exclude": ["node_modules", "dist", "**/*.d.ts"],
   "include": [
     "index.ts",
+    "utils/**/*.ts",
     "events/**/*.ts",
     "commands/**/*.ts",
     "handlers/**/*.ts"

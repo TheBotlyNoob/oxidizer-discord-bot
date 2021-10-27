@@ -1,22 +1,66 @@
 import glob from 'fast-glob';
-import ascii from 'ascii-table';
-import { client, imp, dist } from '@';
+import Table from 'tty-table';
+import { client, rest, imp, dist } from '@';
+import embed from '@/embed';
+import { codeBlock, userMention } from '@discordjs/builders';
+import { Routes } from 'discord-api-types/v9';
+import { _command } from '@/types';
+import log from '@/utils/log';
 
 export default async () => {
   (await glob('commands/**/*.js')).map((command: string) =>
-    imp(`${dist}/${command}`)()
+    command.includes('__') ? null : imp(`${dist}/${command}`)()
   );
 
-  const table = new ascii('Commands');
-  table.setHeading('Command', 'Descriptions', 'Aliases');
-  client.commands
-    .filter((command) => !command.isAlias)
-    .map((command) =>
-      table.addRow(
-        command.name,
-        command.description,
-        command.aliases ? command.aliases.join(', ') : 'No Aliases'
-      )
-    );
-  console.log(`\n${String(table)}\n`);
+  client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isCommand()) return;
+
+    const command = client.commands.get(interaction.commandName);
+
+    if (!command) return;
+
+    try {
+      await command.run(client, rest, interaction);
+    } catch (error) {
+      log.error(error);
+      let args = {
+        embeds: [
+          embed({
+            title: 'Error',
+            description: `Failed To Execute The Command!\nPlease DM Me About This Error At ${userMention(
+              '488802888928329753'
+            )}\n${codeBlock('diff', `- ${String(error)} -`)}`,
+            user: interaction.user,
+            isError: true
+          })
+        ],
+        ephemeral: true
+      };
+
+      try {
+        await interaction.reply(args);
+      } catch {
+        await interaction.editReply(args);
+      }
+    }
+  });
+
+  await rest.put(Routes.applicationCommands(client.config.id), {
+    body: client.commands.map((command: _command) =>
+      command.slashCommand.toJSON()
+    )
+  });
+
+  console.log(
+    `\n${Table(
+      ['Commands', 'Descriptions', 'Aliases'],
+      client.commands
+        .filter((command) => !command.isAlias)
+        .map((command) => [
+          command.name,
+          command.description,
+          command.aliases ? command.aliases.join(', ') : 'No Aliases'
+        ])
+    ).render()}\n`
+  );
 };

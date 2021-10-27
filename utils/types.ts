@@ -11,105 +11,130 @@ import { REST } from '@discordjs/rest';
 import { client } from '@';
 import { readFileSync, writeFileSync } from 'fs-extra';
 import exitHook from '@/exit-hook';
+import quit from '@/quit';
 
-export class Command {
+export class Command implements _command {
+  slashCommand: Omit<
+    SlashCommandBuilder,
+    'addSubcommand' | 'addSubcommandGroup'
+  >;
+  isAlias: boolean;
+  name: string;
+  description: string;
+  aliases?: string[];
+  options?: option[];
+  run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
+
   constructor(command: command) {
     [
       {
         ...command,
         isAlias: false,
-        slashCommand: ((command: command) => {
-          let cmd = new SlashCommandBuilder()
-            .setName(command.name)
-            .setDescription(command.description);
-
-          (command.options || []).map((userOption) => {
-            cmd[
-              `add${userOption.type.replace(/./g, (m, i) =>
-                i === 0 ? m.toUpperCase() : m.toLowerCase()
-              )}Option`
-            ]((option: SlashCommandStringOption) => {
-              let opt = option
-                .setName(userOption.name)
-                .setDescription(userOption.description)
-                .setRequired(Boolean(userOption.isRequired));
-
-              // (option.addChoices instanceof Function
-              //   ? option.addChoices
-              //   : (_: [name: string, value: string][]) => _)(
-              //   (userOption.choices || []).map((choice) => [
-              //     choice.name,
-              //     choice.value
-              //   ])
-              // );
-
-              return opt;
-            });
-          });
-
-          return cmd;
-        })(command)
+        slashCommand: this.slashCommandBuilder(command)
       },
       ...(command.aliases || []).map((alias: string) => ({
         ...command,
         name: alias,
         isAlias: true,
-        slashCommand: ((command: command) => {
-          let cmd = new SlashCommandBuilder()
-            .setName(alias)
-            .setDescription(command.description);
-
-          (command.options || []).map((userOption) => {
-            cmd[
-              `add${userOption.type.replace(/./g, (m, i) =>
-                i === 0 ? m.toUpperCase() : m.toLowerCase()
-              )}Option`
-            ]((option: SlashCommandStringOption) => {
-              let opt = option
-                .setName(userOption.name)
-                .setDescription(userOption.description)
-                .setRequired(Boolean(userOption.isRequired));
-
-              return opt;
-            });
-          });
-
-          return cmd;
-        })(command)
+        slashCommand: this.slashCommandBuilder(command, alias)
       }))
     ].map((command: _command) => {
       client.commands.set(command.name, command);
+      command.isAlias
+        ? this.aliases.push(command.name)
+        : Object.assign(this, command);
     });
+  }
+
+  private addOption(
+    _opt: option,
+    cmd: SlashCommandBuilder,
+    command: this = this
+  ) {
+    let prev = 0;
+    let addOptionString = _opt.type.replace(/./g, (m: string, i: number) =>
+      m === '_'
+        ? (() => {
+            prev = i++;
+            return '';
+          })()
+        : i === 0 || i === prev
+        ? m.toUpperCase()
+        : m.toLowerCase()
+    );
+
+    cmd[
+      `add${
+        addOptionString.includes('Subcommand')
+          ? addOptionString
+          : addOptionString + 'Option'
+      }`
+    ]((option: SlashCommandStringOption) => {
+      if (option.type === undefined)
+        return (
+          _opt.subcommand.slashCommand ??
+          quit(
+            new TypeError(
+              'The Subcommand Is Required When Using A Subcommand Option'
+            )
+          )
+        );
+
+      let opt = option.setName(_opt.name).setDescription(_opt.description);
+
+      opt.setRequired?.(Boolean(_opt.isRequired));
+
+      (_opt.choices || []).map((choice) =>
+        option.addChoice?.(choice.name, choice.value)
+      );
+
+      return opt;
+    });
+  }
+
+  private slashCommandBuilder(command: command, alias?: string, builder?: any) {
+    let cmd = new (builder ?? SlashCommandBuilder)()
+      .setName(alias ?? command.name)
+      .setDescription(command.description);
+
+    (command.options || []).map((option) => this.addOption(option, cmd));
+
+    return cmd;
   }
 }
 
 export class Client extends _Client {
   commands: Collection<string, _command> = new Collection();
   db: DB;
+  config: {
+    token: string;
+    youtubeApiKey: string | null;
+    id: string;
+    name: string;
+    icon: string;
+    description: string;
+    summary: string;
+    hook: boolean;
+    bot_public: boolean;
+    bot_require_code_grant: boolean;
+    verify_key: string;
+    owner: {
+      id: string;
+      username: string;
+      avatar: string;
+      discriminator: string;
+      public_flags: number;
+      flags: number;
+    };
+    team: string | null;
+  };
 }
 
 export interface command {
   name: string;
   description: string;
   aliases?: string[];
-  options?: {
-    name: string;
-    description: string;
-    isRequired?: boolean;
-    type:
-      | 'STRING'
-      | 'INTEGER'
-      | 'NUMBER'
-      | 'BOOLEAN'
-      | 'USER'
-      | 'CHANNEL'
-      | 'ROLE'
-      | 'MENTIONABLE';
-    choices?: {
-      name: string;
-      value: any;
-    }[];
-  }[];
+  options?: option[];
   run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
 }
 
@@ -119,6 +144,28 @@ export interface _command extends command {
     'addSubcommand' | 'addSubcommandGroup'
   >;
   isAlias: boolean;
+}
+
+export interface option {
+  name: string;
+  description: string;
+  isRequired?: boolean;
+  type:
+    | 'SUB_COMMAND'
+    | 'SUB_COMMAND_GROUP'
+    | 'STRING'
+    | 'INTEGER'
+    | 'NUMBER'
+    | 'BOOLEAN'
+    | 'USER'
+    | 'CHANNEL'
+    | 'ROLE'
+    | 'MENTIONABLE';
+  subcommand?: Command;
+  choices?: {
+    name: string;
+    value: any;
+  }[];
 }
 
 export class Collection<K, V> extends _Collection<K, V> {
@@ -146,7 +193,6 @@ export class DB extends Collection<string, unknown> {
       })()
     ))
       this.set(key, value);
-    this.get;
     exitHook(() => writeFileSync(file, JSON.stringify(this.toJSON())));
   }
 }

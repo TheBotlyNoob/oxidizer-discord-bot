@@ -1,4 +1,4 @@
 {
-  "clientId": "The Client ID Of The Bot",
-  "token": "The Bot Token"
+  "token": "The Bot Token",
+  "youtubeApiKey": "A YouTube Api Key, Only Used For The `music` Command"
 }

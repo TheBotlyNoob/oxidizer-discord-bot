@@ -1,14 +1,12 @@
 import { Intents } from 'discord.js';
 import glob from 'fast-glob';
 import onReady from '@/events/ready.js';
-import embed from '@/embed';
-import { codeBlock, userMention } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
-import { Routes } from 'discord-api-types/v9';
 import { Client, _command } from '@/types';
-import { token, clientId } from '@/config.json';
 import log from '@/log';
+import { Routes } from 'discord-api-types/v9';
 import { resolve } from 'node:path';
+import { token } from '@/config.json';
 
 process.chdir(__dirname);
 
@@ -17,6 +15,31 @@ async function main(
   rest: REST,
   require: (path: string) => any
 ) {
+  client.config = {
+    token: token,
+    youtubeApiKey: require('@/config.json').youtubeApiKey,
+    ...((await rest.get(Routes.oauth2CurrentApplication())) as {
+      id: string;
+      name: string;
+      icon: string;
+      description: string;
+      summary: string;
+      hook: boolean;
+      bot_public: boolean;
+      bot_require_code_grant: boolean;
+      verify_key: string;
+      owner: {
+        id: string;
+        username: string;
+        avatar: string;
+        discriminator: string;
+        public_flags: number;
+        flags: number;
+      };
+      team: string | null;
+    })
+  };
+
   await Promise.all(
     (
       await glob('handlers/**/*.js')
@@ -25,41 +48,8 @@ async function main(
 
   client.once('ready', () => onReady(client));
 
-  client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isCommand()) return;
-
-    const command = client.commands.get(interaction.commandName);
-
-    if (!command) return;
-
-    try {
-      await command.run(client, rest, interaction);
-    } catch (error) {
-      console.error(error);
-      await interaction.reply({
-        embeds: [
-          embed({
-            title: 'Error',
-            description: `Failed To Execute The Command!\nPlease DM Me About This Error At ${userMention(
-              '488802888928329753'
-            )}\n${codeBlock('diff', `! ${String(error)} !`)}`,
-            user: interaction.user,
-            isError: true
-          })
-        ],
-        ephemeral: true
-      });
-    }
-  });
-
-  await rest.put(Routes.applicationCommands(clientId), {
-    body: client.commands.map((command: _command) =>
-      command.slashCommand.toJSON()
-    )
-  });
-
-  log.debug(`Token: ${token}`);
-  client.login(token);
+  log.debug(`Token: ${client.config.token}`);
+  client.login(client.config.token);
 }
 
 export function default_require(path: string): any {

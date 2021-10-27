@@ -17,7 +17,7 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*", "utils/*"],
+      "@/*": ["*", "utils/*", "commands/*"],
       "@": ["index"]
     },
     "plugins": [

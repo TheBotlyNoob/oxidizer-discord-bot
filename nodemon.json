@@ -1,6 +1,6 @@
 {
   "watch": ["*"],
-  "ext": "ts",
-  "ignore": ["dist"],
+  "exts": ["ts", "json"],
+  "ignore": ["dist/"],
   "exec": "npm start"
 }

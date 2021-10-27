@@ -22,7 +22,7 @@ export default () =>
       },
       {
         name: 'days',
-        description: 'The Ammount Of Days To Ban The User',
+        description: 'The Amount Of Days To Ban The User',
         type: 'INTEGER'
       }
     ],

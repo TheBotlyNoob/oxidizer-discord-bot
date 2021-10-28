@@ -58,7 +58,7 @@ export default async () => {
         .map((command) => [
           command.name,
           command.description,
-          command.aliases ? command.aliases.join(', ') : 'No Aliases'
+          command.aliases?.length ? command.aliases.join(', ') : 'No Aliases'
         ])
     ).render()}\n`
   );

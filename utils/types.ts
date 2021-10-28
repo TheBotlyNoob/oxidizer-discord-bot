@@ -5,7 +5,8 @@ import {
 } from 'discord.js';
 import {
   SlashCommandBuilder,
-  SlashCommandStringOption
+  SlashCommandStringOption,
+  SlashCommandSubcommandBuilder
 } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { client } from '@';
@@ -25,7 +26,7 @@ export class Command implements _command {
   options?: option[];
   run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
 
-  constructor(command: command) {
+  constructor(command: command, addToDB: boolean = true) {
     [
       {
         ...command,
@@ -39,18 +40,14 @@ export class Command implements _command {
         slashCommand: this.slashCommandBuilder(command, alias)
       }))
     ].map((command: _command) => {
-      client.commands.set(command.name, command);
+      if (addToDB) client.commands.set(command.name, command);
       command.isAlias
         ? this.aliases.push(command.name)
         : Object.assign(this, command);
     });
   }
 
-  private addOption(
-    _opt: option,
-    cmd: SlashCommandBuilder,
-    command: this = this
-  ) {
+  private addOption(_opt: option, cmd: SlashCommandBuilder) {
     let prev = 0;
     let addOptionString = _opt.type.replace(/./g, (m: string, i: number) =>
       m === '_'
@@ -72,7 +69,7 @@ export class Command implements _command {
     ]((option: SlashCommandStringOption) => {
       if (option.type === undefined)
         return (
-          _opt.subcommand.slashCommand ??
+          this.slashCommandBuilder(this, null, SlashCommandSubcommandBuilder) ??
           quit(
             new TypeError(
               'The Subcommand Is Required When Using A Subcommand Option'
@@ -94,7 +91,7 @@ export class Command implements _command {
 
   private slashCommandBuilder(command: command, alias?: string, builder?: any) {
     let cmd = new (builder ?? SlashCommandBuilder)()
-      .setName(alias ?? command.name)
+      .setName(alias || command.name)
       .setDescription(command.description);
 
     (command.options || []).map((option) => this.addOption(option, cmd));

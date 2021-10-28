@@ -1,15 +1,14 @@
 import glob from 'fast-glob';
 import Table from 'tty-table';
-import { client, rest, imp, dist } from '@';
+import { client, rest, dist, defaultRequire, log } from '@';
 import embed from '@/embed';
 import { codeBlock, userMention } from '@discordjs/builders';
 import { Routes } from 'discord-api-types/v9';
 import { _command } from '@/types';
-import log from '@/utils/log';
 
 export default async () => {
-  (await glob('commands/**/*.js')).map((command: string) =>
-    command.includes('__') ? null : imp(`${dist}/${command}`)()
+  (await glob('commands/**/*.js', { ignore: ['**/__*'] })).map(
+    (command: string) => defaultRequire(`${dist}/${command}`)()
   );
 
   client.on('interactionCreate', async (interaction) => {

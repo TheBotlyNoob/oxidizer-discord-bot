@@ -7,8 +7,7 @@
   "scripts": {
     "start": "node -e \"const fs=require('fs');try{fs.rmSync(__dirname+'/dist',{recursive:!0})}catch{}\" && node node_modules/ttypescript/bin/tsc && node --trace-warnings --unhandled-rejections=strict dist/index.js",
     "test": "nodemon",
-    "fmt": "prettier --write .",
-    "lint": "eslint \"**/*.ts\""
+    "fmt": "prettier --write ."
   },
   "keywords": [],
   "author": "Jay Jackson",
@@ -27,11 +26,6 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
-    "@typescript-eslint/eslint-plugin": "^5.2.0",
-    "@typescript-eslint/parser": "^5.2.0",
-    "eslint": "^8.1.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^4.0.0",
     "nodemon": "^2.0.14",
     "prettier": "^2.4.1",
     "ttypescript": "^1.5.12",

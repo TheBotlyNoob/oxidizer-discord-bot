@@ -46,7 +46,9 @@ async function main() {
   client.login(client.config.token);
 }
 
-export const client = new Client({ intents: [Intents.FLAGS.GUILDS] });
+export const client = new Client({
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES]
+});
 export const rest = new REST({ version: '9' }).setToken(token);
 export const dist = __dirname;
 export const root = resolve(__dirname, '..');

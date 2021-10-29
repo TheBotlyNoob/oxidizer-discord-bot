@@ -15,11 +15,14 @@ export default () =>
         name: 'game-type',
         description: 'The Type of Akinator Game to Play',
         type: 'STRING',
-        choices: { animal: 'animal', character: 'character' }
+        choices: { animal: 'animal', character: 'character', object: 'object' }
       }
     ],
     run: async (_, __, interaction) =>
       akinator(interaction, {
-        useButtons: true
+        useButtons: true,
+        gameType: interaction.options.getString('game-type') || 'character',
+        language: interaction.options.getString('language') || 'en',
+        childMode: true
       })
   });

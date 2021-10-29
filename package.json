@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node -e \"const fs=require('fs');try{fs.rmSync(__dirname+'/dist',{recursive:!0})}catch{}\" && node node_modules/ttypescript/bin/tsc && node --trace-warnings --unhandled-rejections=strict dist/index.js",
     "test": "nodemon",
-    "fmt": "prettier --write ."
+    "fmt": "prettier --write .",
+    "lint": "eslint \"**/*.ts\""
   },
   "keywords": [],
   "author": "Jay Jackson",
@@ -17,6 +18,7 @@
     "@discordjs/rest": "^0.1.0-canary.0",
     "discord-api-types": "^0.24.0",
     "discord.js": "^13.2.0",
+    "discord.js-akinator": "^3.3.0",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
     "logging": "^3.3.0",
@@ -25,6 +27,8 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
+    "@typescript-eslint/eslint-plugin": "^5.2.0",
+    "@typescript-eslint/parser": "^5.2.0",
     "eslint": "^8.1.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",

@@ -81,8 +81,8 @@ export class Command implements _command {
 
       opt.setRequired?.(Boolean(_opt.isRequired));
 
-      (_opt.choices || []).map((choice) =>
-        option.addChoice?.(choice.name, choice.value)
+      Object.entries(_opt.choices || []).map(([name, value]) =>
+        option.addChoice?.(name, String(value))
       );
 
       return opt;
@@ -159,10 +159,7 @@ export interface option {
     | 'ROLE'
     | 'MENTIONABLE';
   subcommand?: Command;
-  choices?: {
-    name: string;
-    value: any;
-  }[];
+  choices?: any;
 }
 
 export class Collection<K, V> extends _Collection<K, V> {

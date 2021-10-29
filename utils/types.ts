@@ -37,14 +37,14 @@ export class Command implements _command {
         ...command,
         name: alias,
         isAlias: true,
+        aliases: command.aliases.filter((item: string) => item !== alias),
         slashCommand: this.slashCommandBuilder(command, alias)
       }))
     ].map((command: _command) => {
       if (addToDB) client.commands.set(command.name, command);
-      command.isAlias
-        ? this.aliases.push(command.name)
-        : Object.assign(this, command);
     });
+
+    Object.assign(this, command);
   }
 
   private addOption(_opt: option, cmd: SlashCommandBuilder) {

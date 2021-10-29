@@ -51,10 +51,7 @@ export class Command implements _command {
     let prev = 0;
     let addOptionString = _opt.type.replace(/./g, (m: string, i: number) =>
       m === '_'
-        ? (() => {
-            prev = i++;
-            return '';
-          })()
+        ? void (prev = i++) || ''
         : i === 0 || i === prev
         ? m.toUpperCase()
         : m.toLowerCase()

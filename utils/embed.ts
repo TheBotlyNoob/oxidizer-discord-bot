@@ -1,5 +1,9 @@
-import type { User, EmbedFieldData, ColorResolvable } from 'discord.js';
-import { MessageEmbed } from 'discord.js';
+import {
+  MessageEmbed,
+  User,
+  EmbedFieldData,
+  ColorResolvable
+} from 'discord.js';
 
 export default ({
   title,

@@ -26,7 +26,7 @@ export default () =>
         type: 'INTEGER'
       }
     ],
-    run: async (_, __, interaction) => {
+    async run(_, __, interaction) {
       let user = interaction.options.getUser('user');
       let days = interaction.options.getInteger('days');
       let reason = interaction.options.getString('reason');

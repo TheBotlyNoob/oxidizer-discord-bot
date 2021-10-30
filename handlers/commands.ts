@@ -8,7 +8,11 @@ import { _command } from '@/types';
 
 export default async () => {
   (await glob('commands/**/*.js', { ignore: ['**/__*'] })).map(
-    (command: string) => defaultRequire(`${dist}/${command}`)()
+    (command: string) => {
+      let _command = defaultRequire(`${dist}/${command}`);
+
+      (_command instanceof Function ? _command : () => {})();
+    }
   );
 
   client.on('interactionCreate', async (interaction) => {
@@ -49,6 +53,15 @@ export default async () => {
       command.slashCommand.toJSON()
     )
   });
+
+  await rest.put(
+    Routes.applicationGuildCommands(client.config.id, '900561863094460497'),
+    {
+      body: client.commands.map((command: _command) =>
+        command.slashCommand.toJSON()
+      )
+    }
+  );
 
   console.log(
     `\n${Table(

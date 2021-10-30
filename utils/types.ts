@@ -9,10 +9,17 @@ import {
   SlashCommandSubcommandBuilder
 } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
-import { client } from '@';
-import { readFileSync, writeFileSync } from 'fs-extra';
+import { client, root } from '@';
+import {
+  readFileSync,
+  writeFileSync,
+  createWriteStream,
+  WriteStream,
+  mkdirpSync
+} from 'fs-extra';
 import exitHook from '@/exit-hook';
 import quit from '@/quit';
+import createLogger from 'logging';
 
 export class Command implements _command {
   slashCommand: Omit<
@@ -129,6 +136,7 @@ export interface command {
   description: string;
   aliases?: string[];
   options?: option[];
+  forOwner?: boolean;
   run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
 }
 
@@ -156,7 +164,9 @@ export interface option {
     | 'ROLE'
     | 'MENTIONABLE';
   subcommand?: Command;
-  choices?: any;
+  choices?: {
+    [key: string]: string;
+  };
 }
 
 export class Collection<K, V> extends _Collection<K, V> {
@@ -166,6 +176,114 @@ export class Collection<K, V> extends _Collection<K, V> {
 
   defaultGet(key: K, defaultValue?: V): V {
     return this.get(key) ?? defaultValue;
+  }
+}
+
+export class logger {
+  logger: createLogger.Logger;
+  errStream: WriteStream;
+  outStream: WriteStream;
+
+  constructor(name: string) {
+    let time = Date.now();
+    this.logger = createLogger(name);
+    mkdirpSync(`${root}/logs`);
+    this.errStream = createWriteStream(`${root}/logs/err-${time}.log`);
+    this.outStream = createWriteStream(`${root}/logs/out-${time}.log`);
+  }
+
+  info(...args: any[]): void {
+    this.logger.info(...args);
+    this.outStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+  }
+
+  debug(...args: any[]): void {
+    this.logger.debug(...args);
+    this.outStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+  }
+
+  error(...args: any[]): void {
+    this.logger.error(...args);
+    this.errStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+    this.outStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+  }
+
+  warn(...args: any[]): void {
+    this.logger.warn(...args);
+    this.errStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+    this.outStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
   }
 }
 

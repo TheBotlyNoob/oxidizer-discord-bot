@@ -3,5 +3,5 @@ import { log } from '@';
 
 export default async (client: Client) => {
   log.info(`Logged In As ${client.user.tag}!`);
-  client.user.setActivity('Bart Simposon', { type: 'WATCHING' });
+  client.user.setActivity('Bart Simpson', { type: 'WATCHING' });
 };

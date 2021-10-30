@@ -7,7 +7,7 @@ export default () =>
     name: 'locate-toilet',
     description: 'Locate The Nearest Toilet',
     aliases: ['toilet'],
-    run: async (_, __, interaction) => {
+    async run(_, __, interaction) {
       await interaction.reply({
         embeds: [
           embed({

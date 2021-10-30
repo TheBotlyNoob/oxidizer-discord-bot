@@ -16,13 +16,19 @@ export default () =>
         description: 'The Type of Akinator Game to Play',
         type: 'STRING',
         choices: { animal: 'animal', character: 'character', object: 'object' }
+      },
+      {
+        name: 'child-mode',
+        description: 'Whether To Play In Child Mode',
+        type: 'BOOLEAN'
       }
     ],
-    run: async (_, __, interaction) =>
+    async run(_, __, interaction) {
       akinator(interaction, {
         useButtons: true,
         gameType: interaction.options.getString('game-type') || 'character',
         language: interaction.options.getString('language') || 'en',
-        childMode: true
-      })
+        childMode: Boolean(interaction.options.getBoolean('child-mode'))
+      });
+    }
   });

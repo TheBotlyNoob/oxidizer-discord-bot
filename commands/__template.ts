@@ -5,5 +5,5 @@ export default () =>
     name: 'name',
     description: 'Command Template For The Principal Bot',
     aliases: [],
-    run: async (_, __, ___) => null
+    async run(_, __, ___) {}
   });

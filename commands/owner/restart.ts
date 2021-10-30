@@ -3,14 +3,26 @@ import { pull } from 'isomorphic-git';
 import http from 'isomorphic-git/http/node';
 import fs from 'fs';
 import { root, client, restart, log } from '@';
+import embed from '@/embed';
 
 export default new Command({
   name: 'restart',
   description: 'Restart The Bot',
-  async run(_, __, ___) {
+  async run(_, __, interaction) {
     log.warn('Pulling, And Restarting...');
 
-    pull({
+    await interaction.reply({
+      embeds: [
+        embed({
+          title: 'Pulling And Restarting...',
+          description: '',
+          user: interaction.user
+        })
+      ],
+      ephemeral: true
+    });
+
+    await pull({
       fs,
       http,
       dir: root,
@@ -18,6 +30,7 @@ export default new Command({
         name: client.config.name
       }
     });
-    restart();
+
+    await restart();
   }
 });

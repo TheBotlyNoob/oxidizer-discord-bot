@@ -6,12 +6,14 @@ import { Client, _command, logger } from '@/types';
 import { Routes } from 'discord-api-types/v9';
 import { resolve } from 'node:path';
 import { token } from '@/config.json';
-import { spawn } from 'child_process';
+import { spawnSync } from 'child_process';
+import { yellow } from 'chalk';
 
 process.chdir(__dirname);
 
 export default async function main() {
-  console.log(process.env.RESTARTED);
+  if (process.env.RESTARTED === 'yes')
+    log.info(`Restarted At ${yellow(new Date().toLocaleString())}`);
 
   client.config = {
     token: token,
@@ -62,13 +64,11 @@ export function defaultRequire(path: string) {
 }
 
 export async function restart() {
-  spawn('npm', ['start'], {
-    stdio: 'pipe',
+  return spawnSync('npm', ['start'], {
+    stdio: 'inherit',
     shell: true,
     env: { RESTARTED: 'yes' }
   });
-
-  process.exit(0);
 }
 
 if (require.main === module) main();

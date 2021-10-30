@@ -22,7 +22,7 @@ import quit from '@/quit';
 import createLogger from 'logging';
 
 export class Command implements _command {
-  slashCommand: Omit<
+  slash_command: Omit<
     SlashCommandBuilder,
     'addSubcommand' | 'addSubcommandGroup'
   >;
@@ -38,14 +38,14 @@ export class Command implements _command {
       {
         ...command,
         isAlias: false,
-        slashCommand: this.slashCommandBuilder(command)
+        slash_command: this.slashCommandBuilder(command)
       },
       ...(command.aliases || []).map((alias: string) => ({
         ...command,
         name: alias,
         isAlias: true,
         aliases: command.aliases.filter((item: string) => item !== alias),
-        slashCommand: this.slashCommandBuilder(command, alias)
+        slash_command: this.slashCommandBuilder(command, alias)
       }))
     ].map((command: _command) => {
       if (addToDB) client.commands.set(command.name, command);
@@ -141,7 +141,7 @@ export interface command {
 }
 
 export interface _command extends command {
-  slashCommand: Omit<
+  slash_command: Omit<
     SlashCommandBuilder,
     'addSubcommand' | 'addSubcommandGroup'
   >;

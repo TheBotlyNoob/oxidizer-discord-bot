@@ -23,7 +23,21 @@ export default async () => {
     if (!command) return;
 
     try {
-      await command.run(client, rest, interaction);
+      if (
+        !command.forOwner ||
+        (command.forOwner && interaction.user.id === client.config.owner.id)
+      )
+        await command.run(client, rest, interaction);
+      else
+        await interaction.reply({
+          embeds: [
+            embed({
+              title: 'You Are Not An Owner',
+              description: `You Are Not An Owner Of ${client.config.name}`,
+              user: interaction.user
+            })
+          ]
+        });
     } catch (error) {
       log.error(error);
       let args = {
@@ -50,7 +64,7 @@ export default async () => {
 
   await rest.put(Routes.applicationCommands(client.config.id), {
     body: client.commands.map((command: _command) =>
-      command.slashCommand.toJSON()
+      command.slash_command.toJSON()
     )
   });
 
@@ -58,7 +72,7 @@ export default async () => {
     Routes.applicationGuildCommands(client.config.id, '900561863094460497'),
     {
       body: client.commands.map((command: _command) =>
-        command.slashCommand.toJSON()
+        command.slash_command.toJSON()
       )
     }
   );

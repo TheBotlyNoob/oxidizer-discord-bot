@@ -22,6 +22,18 @@ export default async () => {
 
     if (!command) return;
 
+    if (!command.run)
+      return await interaction.reply({
+        embeds: [
+          embed({
+            title: 'That Is Not A Command',
+            description: 'That Is Not A Runnable Command!',
+            user: interaction.user,
+            isError: true
+          })
+        ]
+      });
+
     try {
       if (
         !command.forOwner ||
@@ -33,7 +45,7 @@ export default async () => {
           embeds: [
             embed({
               title: 'You Are Not An Owner',
-              description: `You Are Not An Owner Of ${client.config.name}`,
+              description: `You Are Not The Owner Of ${client.config.name}`,
               user: interaction.user
             })
           ]
@@ -77,7 +89,7 @@ export default async () => {
     }
   );
 
-  console.log(
+  log.log(
     `\n${Table(
       ['Commands', 'Descriptions', 'Aliases'],
       client.commands

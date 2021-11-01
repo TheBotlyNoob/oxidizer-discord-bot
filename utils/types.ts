@@ -38,14 +38,14 @@ export class Command implements _command {
       {
         ...command,
         isAlias: false,
-        slash_command: this.slashCommandBuilder(command)
+        slash_command: this.slash_command_builder(command)
       },
       ...(command.aliases || []).map((alias: string) => ({
         ...command,
         name: alias,
         isAlias: true,
         aliases: command.aliases.filter((item: string) => item !== alias),
-        slash_command: this.slashCommandBuilder(command, alias)
+        slash_command: this.slash_command_builder(command, alias)
       }))
     ].map((command: _command) => {
       if (addToDB) client.commands.set(command.name, command);
@@ -54,9 +54,9 @@ export class Command implements _command {
     Object.assign(this, command);
   }
 
-  private addOption(_opt: option, cmd: SlashCommandBuilder) {
+  private add_option(_opt: option, cmd: SlashCommandBuilder) {
     let prev = 0;
-    let addOptionString = _opt.type.replace(/./g, (m: string, i: number) =>
+    let add_option_string = _opt.type.replace(/./g, (m: string, i: number) =>
       m === '_'
         ? void (prev = i++) || ''
         : i === 0 || i === prev
@@ -66,20 +66,23 @@ export class Command implements _command {
 
     cmd[
       `add${
-        addOptionString.includes('Subcommand')
-          ? addOptionString
-          : addOptionString + 'Option'
+        add_option_string.includes('Subcommand')
+          ? add_option_string
+          : add_option_string + 'Option'
       }`
     ]((option: SlashCommandStringOption) => {
-      if (option.type === undefined)
-        return (
-          this.slashCommandBuilder(this, null, SlashCommandSubcommandBuilder) ??
-          quit(
-            new TypeError(
-              'The Subcommand Is Required When Using A Subcommand Option'
+      if (_opt.type.includes('SUB_COMMAND'))
+        return _opt.subcommand
+          ? this.slash_command_builder(
+              _opt.subcommand,
+              null,
+              SlashCommandSubcommandBuilder
             )
-          )
-        );
+          : quit(
+              new TypeError(
+                'The Subcommand Is Required When Using A Subcommand Option'
+              )
+            );
 
       let opt = option.setName(_opt.name).setDescription(_opt.description);
 
@@ -93,12 +96,16 @@ export class Command implements _command {
     });
   }
 
-  private slashCommandBuilder(command: command, alias?: string, builder?: any) {
-    let cmd = new (builder ?? SlashCommandBuilder)()
+  private slash_command_builder(
+    command: command,
+    alias?: string,
+    builder?: any
+  ) {
+    let cmd: SlashCommandBuilder = new (builder ?? SlashCommandBuilder)()
       .setName(alias || command.name)
       .setDescription(command.description);
 
-    (command.options || []).map((option) => this.addOption(option, cmd));
+    (command.options || []).map((option) => this.add_option(option, cmd));
 
     return cmd;
   }
@@ -109,7 +116,7 @@ export class Client extends _Client {
   db: DB;
   config: {
     token: string;
-    youtubeApiKey: string | null;
+    youtubeApiKey?: string;
     id: string;
     name: string;
     icon: string;
@@ -137,7 +144,7 @@ export interface command {
   aliases?: string[];
   options?: option[];
   forOwner?: boolean;
-  run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
+  run?: (client: Client, rest: REST, interaction: CommandInteraction) => any;
 }
 
 export interface _command extends command {
@@ -179,7 +186,7 @@ export class Collection<K, V> extends _Collection<K, V> {
   }
 }
 
-export class logger {
+export class Logger {
   logger: createLogger.Logger;
   errStream: WriteStream;
   outStream: WriteStream;
@@ -192,7 +199,7 @@ export class logger {
     this.outStream = createWriteStream(`${root}/logs/out-${time}.log`);
   }
 
-  info(...args: any[]): void {
+  info(...args: unknown[]): void {
     this.logger.info(...args);
     this.outStream.write(
       args
@@ -209,7 +216,7 @@ export class logger {
     );
   }
 
-  debug(...args: any[]): void {
+  debug(...args: unknown[]): void {
     this.logger.debug(...args);
     this.outStream.write(
       args
@@ -226,7 +233,7 @@ export class logger {
     );
   }
 
-  error(...args: any[]): void {
+  error(...args: unknown[]): void {
     this.logger.error(...args);
     this.errStream.write(
       args
@@ -256,8 +263,39 @@ export class logger {
     );
   }
 
-  warn(...args: any[]): void {
+  warn(...args: unknown[]): void {
     this.logger.warn(...args);
+    this.errStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+    this.outStream.write(
+      args
+        .map((arg) => {
+          if (arg instanceof String || typeof arg === 'string') return arg;
+
+          try {
+            return JSON.stringify(arg);
+          } catch {
+            return arg;
+          }
+        })
+        .join('') + '\n'
+    );
+  }
+
+  log(...args: unknown[]): void {
+    console.log(...args);
+
     this.errStream.write(
       args
         .map((arg) => {

@@ -201,6 +201,7 @@ export class Logger {
 
   info(...args: unknown[]): void {
     this.logger.info(...args);
+
     this.outStream.write(
       args
         .map((arg) => {
@@ -218,6 +219,7 @@ export class Logger {
 
   debug(...args: unknown[]): void {
     this.logger.debug(...args);
+
     this.outStream.write(
       args
         .map((arg) => {
@@ -235,6 +237,7 @@ export class Logger {
 
   error(...args: unknown[]): void {
     this.logger.error(...args);
+
     this.errStream.write(
       args
         .map((arg) => {
@@ -265,6 +268,7 @@ export class Logger {
 
   warn(...args: unknown[]): void {
     this.logger.warn(...args);
+
     this.errStream.write(
       args
         .map((arg) => {

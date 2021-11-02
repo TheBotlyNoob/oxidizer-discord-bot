@@ -57,8 +57,8 @@ export default () =>
           embeds: [
             embed({
               title: 'You Were Banned',
-              description: `You Were Banned From: ${interaction.guild.name} ${
-                days ? `For ${days} Days` : ''
+              description: `You Were Banned From: ${interaction.guild.name}${
+                days ? ` For ${days} Days` : ''
               }, For: ${reason}`,
               user,
               isError: true

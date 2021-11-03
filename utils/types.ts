@@ -329,7 +329,7 @@ export class Logger {
   }
 }
 
-export class DB extends Collection<string, unknown> {
+export class DB extends Collection<string, any> {
   constructor(file: string) {
     super();
 

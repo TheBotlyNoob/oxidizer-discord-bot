@@ -3,23 +3,15 @@ import {
   Collection as _Collection,
   CommandInteraction
 } from 'discord.js';
-import {
-  SlashCommandBuilder,
-  SlashCommandStringOption,
-  SlashCommandSubcommandBuilder
-} from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
 import { client, root } from '@/main.js';
 import fs from 'fs-extra';
 import exitHook from '@/exit-hook.js';
-import quit from '@/quit.js';
-import createLogger from 'logging';
+import { Snowflake as _Snowflake } from '@sapphire/snowflake';
+import { default as createLogger } from 'logging';
 
 export class Command implements _command {
-  slash_command: Omit<
-    SlashCommandBuilder,
-    'addSubcommand' | 'addSubcommandGroup'
-  >;
+  slash_command: slash_command;
   isAlias: boolean;
   name: string;
   description: string;
@@ -55,60 +47,16 @@ export class Command implements _command {
     Object.assign(this, command);
   }
 
-  private add_option(_opt: option, cmd: SlashCommandBuilder) {
-    let prev = 0;
-    let add_option_string = _opt.type.replace(/./g, (m: string, i: number) =>
-      m === '_'
-        ? void (prev = i++) || ''
-        : i === 0 || i === prev
-        ? m.toUpperCase()
-        : m.toLowerCase()
-    );
-
-    cmd[
-      `add${
-        add_option_string.includes('Subcommand')
-          ? add_option_string
-          : add_option_string + 'Option'
-      }`
-    ]((option: SlashCommandStringOption) => {
-      if (_opt.type.includes('SUB_COMMAND'))
-        return _opt.subcommand
-          ? this.slash_command_builder(
-              _opt.subcommand,
-              null,
-              SlashCommandSubcommandBuilder
-            )
-          : quit(
-              new TypeError(
-                'The Subcommand Is Required When Using A Subcommand Option'
-              )
-            );
-
-      let opt = option.setName(_opt.name).setDescription(_opt.description);
-
-      opt.setRequired?.(Boolean(_opt.isRequired));
-
-      Object.entries(_opt.choices || []).map(([name, value]) =>
-        option.addChoice?.(name, String(value))
-      );
-
-      return opt;
-    });
-  }
+  private add_option(option: option, cmd: slash_command) {}
 
   private slash_command_builder(
     command: command,
     alias?: string,
     builder?: any
-  ) {
-    let cmd: SlashCommandBuilder = new (builder ?? SlashCommandBuilder)()
-      .setName(alias || command.name)
-      .setDescription(command.description);
-
-    (command.options || []).map((option) => this.add_option(option, cmd));
-
-    return cmd;
+  ): any {
+    // let cmd: slash_command = { id: BigInt(2) };
+    // (command.options || []).map((option) => this.add_option(option, cmd));
+    // return cmd;
   }
 }
 
@@ -156,11 +104,20 @@ export interface command {
 }
 
 export interface _command extends command {
-  slash_command: Omit<
-    SlashCommandBuilder,
-    'addSubcommand' | 'addSubcommandGroup'
-  >;
+  slash_command: slash_command;
   isAlias: boolean;
+}
+
+export interface slash_command {
+  id: Snowflake;
+  type?: ('CHAT_INPUT' | 1) | ('USER' | 2) | ('MESSAGE' | 3);
+  application_id: Snowflake;
+  guild_id?: Snowflake;
+  name: string;
+  description: string;
+  options?: option[];
+  default_permission?: boolean;
+  version: Snowflake;
 }
 
 export interface option {
@@ -168,16 +125,16 @@ export interface option {
   description: string;
   isRequired?: boolean;
   type:
-    | 'SUB_COMMAND'
-    | 'SUB_COMMAND_GROUP'
-    | 'STRING'
-    | 'INTEGER'
-    | 'NUMBER'
-    | 'BOOLEAN'
-    | 'USER'
-    | 'CHANNEL'
-    | 'ROLE'
-    | 'MENTIONABLE';
+    | ('SUB_COMMAND' | 1)
+    | ('SUB_COMMAND_GROUP' | 2)
+    | ('STRING' | 3)
+    | ('INTEGER' | 4)
+    | ('BOOLEAN' | 5)
+    | ('USER' | 6)
+    | ('CHANNEL' | 7)
+    | ('ROLE' | 8)
+    | ('MENTIONABLE' | 9)
+    | ('NUMBER' | 10);
   subcommand?: Command;
   choices?: {
     [key: string]: string;
@@ -189,7 +146,7 @@ export class Collection<K, V> extends _Collection<K, V> {
     return Object.fromEntries(this);
   }
 
-  defaultGet(key: K, defaultValue?: V): V {
+  defaultGet(key: K, defaultValue: V): V {
     return this.get(key) ?? defaultValue;
   }
 }
@@ -201,7 +158,7 @@ export class Logger {
 
   constructor(name: string) {
     let time = Date.now();
-    this.logger = createLogger(name);
+    this.logger = (createLogger as any).default(name);
     fs.mkdirpSync(`${root}/logs`);
     this.errStream = fs.createWriteStream(`${root}/logs/err-${time}.log`);
     this.outStream = fs.createWriteStream(`${root}/logs/out-${time}.log`);
@@ -339,9 +296,12 @@ export class Logger {
 
 export class DB extends Collection<
   string,
-  {
-    [key: string]: any;
-  }
+  Collection<
+    string,
+    {
+      [key: string]: any;
+    }
+  >
 > {
   constructor(file: string) {
     super();
@@ -356,12 +316,15 @@ export class DB extends Collection<
         }
       })()
     ))
-      this.set(
-        key,
-        value as {
-          [key: string]: any;
-        }
-      );
+      this.set(key, value as any);
     exitHook(() => fs.writeFileSync(file, JSON.stringify(this.toJSON())));
   }
+}
+
+export class Snowflake extends Number {
+  constructor(epoch?: number | bigint | Date) {
+    super(new _Snowflake(epoch || Snowflake.DiscordEpoch));
+  }
+
+  public static readonly DiscordEpoch = 1420070400000;
 }

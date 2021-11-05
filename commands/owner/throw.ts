@@ -1,5 +1,5 @@
-import { Command } from '@/types';
-import quit from '@/quit';
+import { Command } from '@/types.js';
+import quit from '@/quit.js';
 
 export default () =>
   new Command({

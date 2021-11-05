@@ -1,5 +1,5 @@
-import { Command } from '@/types';
-import embed from '@/embed';
+import { Command } from '@/types.js';
+import embed from '@/embed.js';
 
 export default () =>
   new Command({

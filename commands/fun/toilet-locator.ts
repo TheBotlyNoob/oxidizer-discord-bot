@@ -1,6 +1,6 @@
-import { Command } from '@/types';
-import rand from '@/rand';
-import embed from '@/embed';
+import { Command } from '@/types.js';
+import rand from '@/rand.js';
+import embed from '@/embed.js';
 
 export default () =>
   new Command({

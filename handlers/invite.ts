@@ -1,15 +1,18 @@
 import { client } from '@/main.js';
+import { Collection } from '@/types.js';
 
 export default async () =>
   client.on('guildCreate', async (guild) => {
-    client.db.set(
-      `invite-${guild.name}`,
-      await (
-        guild.widgetChannel ||
-        guild.rulesChannel ||
-        guild.publicUpdatesChannel ||
-        guild.systemChannel ||
-        guild.afkChannel
-      ).createInvite({ maxAge: 0, maxUses: 0 })
-    );
+    client.db
+      .defaultGet(guild.id, new Collection<string, any>())
+      .set(
+        'invite',
+        await (
+          guild.widgetChannel ||
+          guild.rulesChannel ||
+          guild.publicUpdatesChannel ||
+          guild.systemChannel ||
+          guild.afkChannel
+        ).createInvite({ maxAge: 0, maxUses: 0 })
+      );
   });

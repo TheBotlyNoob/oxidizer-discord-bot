@@ -27,6 +27,7 @@
   "exclude": ["node_modules", "dist", "**/*.d.ts"],
   "include": [
     "main.ts",
+    "*.json",
     "utils/**/*.ts",
     "events/**/*.ts",
     "commands/**/*.ts",

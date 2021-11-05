@@ -1,17 +1,17 @@
 import glob from 'fast-glob';
 import Table from 'tty-table';
-import { client, rest, dist, log } from '@/main.js';
-import embed from '@/embed';
-import { codeBlock, userMention } from '@discordjs/builders';
+import { client, rest, dist, log, require } from '@/main.js';
+import embed from '@/embed.js';
+import { codeBlock, userMention } from '@/formatters.js';
 import { Routes } from 'discord-api-types/v9';
-import { _command } from '@/types';
+import { _command, Collection } from '@/types.js';
 
 export default async () => {
   await Promise.all(
     (
       await glob('commands/**/*.js', { ignore: ['**/__*'] })
     ).map(async (command: string) => {
-      let _command = await import(`${dist}/${command}`);
+      let _command = await require(`${dist}/${command}`);
 
       (_command instanceof Function ? _command : () => {})();
     })
@@ -45,7 +45,10 @@ export default async () => {
           interaction,
           client,
           rest,
-          client.db.defaultGet(interaction.guild.id, {})
+          client.db.defaultGet(
+            interaction.guild.id,
+            new Collection<string, any>()
+          )
         );
       } else
         await interaction.reply({
@@ -82,17 +85,13 @@ export default async () => {
   });
 
   await rest.put(Routes.applicationCommands(client.config.id), {
-    body: client.commands.map((command: _command) =>
-      command.slash_command.toJSON()
-    )
+    body: client.commands.map((command: _command) => command.slash_command)
   });
 
   await rest.put(
     Routes.applicationGuildCommands(client.config.id, '900561863094460497'),
     {
-      body: client.commands.map((command: _command) =>
-        command.slash_command.toJSON()
-      )
+      body: client.commands.map((command: _command) => command.slash_command)
     }
   );
 

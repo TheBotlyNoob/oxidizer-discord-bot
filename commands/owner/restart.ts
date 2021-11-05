@@ -1,9 +1,9 @@
-import { Command } from '@/types';
+import { Command } from '@/types.js';
 import { pull } from 'isomorphic-git';
 import http from 'isomorphic-git/http/node';
 import fs from 'fs';
 import { root, restart, log } from '@/main.js';
-import embed from '@/embed';
+import embed from '@/embed.js';
 
 export default new Command({
   name: 'restart',

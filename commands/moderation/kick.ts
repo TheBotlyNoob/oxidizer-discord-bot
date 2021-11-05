@@ -21,7 +21,7 @@ export default () =>
         isRequired: true
       }
     ],
-    async run(_, __, interaction) {
+    async run(interaction, client, rest, db): Promise<any> {
       let user = interaction.options.getUser('user');
       let reason = interaction.options.getString('reason');
       let member = await interaction.guild.members.fetch(user);

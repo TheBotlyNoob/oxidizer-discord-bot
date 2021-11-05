@@ -1,5 +1,5 @@
 import { Client } from '@/types';
-import { log } from '@';
+import { log } from '@/main.js';
 
 export default async (client: Client) => {
   log.info(`Logged In As ${client.user.tag}!`);

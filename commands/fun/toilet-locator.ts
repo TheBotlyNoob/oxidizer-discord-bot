@@ -7,7 +7,7 @@ export default () =>
     name: 'locate-toilet',
     description: 'Locate The Nearest Toilet',
     aliases: ['toilet'],
-    async run(_, __, interaction) {
+    async run(interaction, client, rest, db): Promise<any> {
       await interaction.reply({
         embeds: [
           embed({

@@ -2,13 +2,13 @@ import { Command } from '@/types';
 import { pull } from 'isomorphic-git';
 import http from 'isomorphic-git/http/node';
 import fs from 'fs';
-import { root, client, restart, log } from '@';
+import { root, restart, log } from '@/main.js';
 import embed from '@/embed';
 
 export default new Command({
   name: 'restart',
   description: 'Restart The Bot',
-  async run(_, __, interaction) {
+  async run(interaction, client, rest, db): Promise<any> {
     log.warn('Pulling, And Restarting...');
 
     await interaction.reply({

@@ -5,14 +5,14 @@ export default () =>
   new Command({
     name: 'get-invite',
     description: 'Get An Invite To The Current Guild',
-    async run(client, __, interaction) {
+    async run(interaction, client, rest, db): Promise<any> {
       await interaction.reply({
         embeds: [
           embed({
             title: 'Invite',
             description: `The Invite Is: ${
               (
-                client.db.get(`invite-${interaction.guild.name}`) || {
+                db.get('invite') || {
                   url: 'There Is No Invite For This Server!'
                 }
               ).url

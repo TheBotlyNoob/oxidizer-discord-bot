@@ -1,18 +1,20 @@
 import glob from 'fast-glob';
 import Table from 'tty-table';
-import { client, rest, dist, defaultRequire, log } from '@';
+import { client, rest, dist, log } from '@/main.js';
 import embed from '@/embed';
 import { codeBlock, userMention } from '@discordjs/builders';
 import { Routes } from 'discord-api-types/v9';
 import { _command } from '@/types';
 
 export default async () => {
-  (await glob('commands/**/*.js', { ignore: ['**/__*'] })).map(
-    (command: string) => {
-      let _command = defaultRequire(`${dist}/${command}`);
+  await Promise.all(
+    (
+      await glob('commands/**/*.js', { ignore: ['**/__*'] })
+    ).map(async (command: string) => {
+      let _command = await import(`${dist}/${command}`);
 
       (_command instanceof Function ? _command : () => {})();
-    }
+    })
   );
 
   client.on('interactionCreate', async (interaction) => {
@@ -38,9 +40,14 @@ export default async () => {
       if (
         !command.forOwner ||
         (command.forOwner && interaction.user.id === client.config.owner.id)
-      )
-        await command.run(client, rest, interaction);
-      else
+      ) {
+        await command.run(
+          interaction,
+          client,
+          rest,
+          client.db.defaultGet(interaction.guild.id, {})
+        );
+      } else
         await interaction.reply({
           embeds: [
             embed({

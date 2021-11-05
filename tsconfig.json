@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
     "types": ["node"],
-    "target": "esnext",
-    "module": "commonjs",
+    "target": "ESNext",
+    "module": "ESNext",
     "moduleResolution": "node",
     "lib": ["es2017", "es7", "es6", "dom"],
     "declaration": true,
@@ -17,8 +17,7 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*", "utils/*", "commands/*"],
-      "@": ["index"]
+      "@/*": ["*", "utils/*", "commands/*"]
     },
     "plugins": [
       { "transform": "typescript-transform-paths" },
@@ -27,7 +26,7 @@
   },
   "exclude": ["node_modules", "dist", "**/*.d.ts"],
   "include": [
-    "index.ts",
+    "main.ts",
     "utils/**/*.ts",
     "events/**/*.ts",
     "commands/**/*.ts",

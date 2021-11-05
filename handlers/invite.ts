@@ -1,5 +1,4 @@
-import { client } from '@';
-import rand from '@/randArray';
+import { client } from '@/main.js';
 
 export default async () =>
   client.on('guildCreate', async (guild) => {

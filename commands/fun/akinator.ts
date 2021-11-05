@@ -23,7 +23,7 @@ export default () =>
         type: 'BOOLEAN'
       }
     ],
-    async run(_, __, interaction) {
+    async run(interaction, client, rest, db): Promise<any> {
       akinator(interaction, {
         useButtons: true,
         gameType: interaction.options.getString('game-type') || 'character',

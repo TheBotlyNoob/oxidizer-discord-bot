@@ -9,7 +9,7 @@ export default () =>
       { name: 'message', description: 'The Error Message', type: 'STRING' }
     ],
     forOwner: true,
-    async run(_, __, interaction) {
+    async run(interaction, client, rest, db): Promise<any> {
       quit(interaction.options.getString('message') || 'An Error');
     }
   });

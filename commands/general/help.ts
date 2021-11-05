@@ -6,7 +6,7 @@ export default () =>
     name: 'help',
     description: 'Commands And Their Descriptions',
     aliases: ['commands'],
-    async run(client, _, interaction) {
+    async run(interaction, client, rest, db): Promise<any> {
       await interaction.reply({
         embeds: [
           embed({

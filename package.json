@@ -2,10 +2,10 @@
   "name": "principal-bot",
   "version": "1.0.0",
   "description": "a bot for just about everything",
-  "main": "dist/index.js",
-  "type": "commonjs",
+  "main": "dist/main.js",
+  "type": "module",
   "scripts": {
-    "start": "node -e \"const fs=require('fs');try{fs.rmSync(__dirname+'/dist',{recursive:!0})}catch{}\" && node node_modules/ttypescript/bin/tsc && node --trace-warnings --unhandled-rejections=strict dist/index.js",
+    "start": "node -e \"const fs=require('fs');try{fs.rmSync(__dirname+'/dist',{recursive:!0})}catch{}\" && node node_modules/ttypescript/bin/tsc && node --trace-warnings --unhandled-rejections=strict dist/main.js",
     "test": "nodemon",
     "fmt": "prettier --write ."
   },
@@ -13,11 +13,11 @@
   "author": "Jay Jackson",
   "license": "MIT",
   "dependencies": {
-    "@discordjs/builders": "^0.8.1",
+    "@discordjs/builders": "^0.8.2",
     "@discordjs/rest": "^0.1.0-canary.0",
     "chalk": "^4.1.2",
     "discord-api-types": "^0.24.0",
-    "discord.js": "^13.3.0",
+    "discord.js": "^13.3.1",
     "discord.js-akinator": "^3.3.0",
     "fast-glob": "^3.2.7",
     "fs-extra": "^10.0.0",
@@ -30,6 +30,7 @@
     "@types/nodemon": "^1.19.1",
     "nodemon": "^2.0.14",
     "prettier": "^2.4.1",
+    "ts-transform-paths": "^2.0.3",
     "ttypescript": "^1.5.12",
     "typescript-transform-paths": "^3.3.1"
   }

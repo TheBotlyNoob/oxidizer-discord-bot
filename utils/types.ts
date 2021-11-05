@@ -9,16 +9,10 @@ import {
   SlashCommandSubcommandBuilder
 } from '@discordjs/builders';
 import { REST } from '@discordjs/rest';
-import { client, root } from '@';
-import {
-  readFileSync,
-  writeFileSync,
-  createWriteStream,
-  WriteStream,
-  mkdirpSync
-} from 'fs-extra';
-import exitHook from '@/exit-hook';
-import quit from '@/quit';
+import { client, root } from '@/main.js';
+import fs from 'fs-extra';
+import exitHook from '@/exit-hook.js';
+import quit from '@/quit.js';
 import createLogger from 'logging';
 
 export class Command implements _command {
@@ -31,7 +25,14 @@ export class Command implements _command {
   description: string;
   aliases?: string[];
   options?: option[];
-  run: (client: Client, rest: REST, interaction: CommandInteraction) => any;
+  run: (
+    interaction: CommandInteraction,
+    client: Client,
+    rest: REST,
+    db: {
+      [key: string]: any;
+    }
+  ) => any;
 
   constructor(command: command, addToDB: boolean = true) {
     [
@@ -144,7 +145,14 @@ export interface command {
   aliases?: string[];
   options?: option[];
   forOwner?: boolean;
-  run?: (client: Client, rest: REST, interaction: CommandInteraction) => any;
+  run?: (
+    interaction: CommandInteraction,
+    client: Client,
+    rest: REST,
+    db: {
+      [key: string]: any;
+    }
+  ) => any;
 }
 
 export interface _command extends command {
@@ -188,15 +196,15 @@ export class Collection<K, V> extends _Collection<K, V> {
 
 export class Logger {
   logger: createLogger.Logger;
-  errStream: WriteStream;
-  outStream: WriteStream;
+  errStream: fs.WriteStream;
+  outStream: fs.WriteStream;
 
   constructor(name: string) {
     let time = Date.now();
     this.logger = createLogger(name);
-    mkdirpSync(`${root}/logs`);
-    this.errStream = createWriteStream(`${root}/logs/err-${time}.log`);
-    this.outStream = createWriteStream(`${root}/logs/out-${time}.log`);
+    fs.mkdirpSync(`${root}/logs`);
+    this.errStream = fs.createWriteStream(`${root}/logs/err-${time}.log`);
+    this.outStream = fs.createWriteStream(`${root}/logs/out-${time}.log`);
   }
 
   info(...args: unknown[]): void {
@@ -329,21 +337,31 @@ export class Logger {
   }
 }
 
-export class DB extends Collection<string, any> {
+export class DB extends Collection<
+  string,
+  {
+    [key: string]: any;
+  }
+> {
   constructor(file: string) {
     super();
 
     for (const [key, value] of Object.entries(
       (() => {
         try {
-          return JSON.parse(readFileSync(file, 'utf-8'));
+          return JSON.parse(fs.readFileSync(file, 'utf-8'));
         } catch {
-          writeFileSync(file, '{}');
+          fs.writeFileSync(file, '{}');
           return {};
         }
       })()
     ))
-      this.set(key, value);
-    exitHook(() => writeFileSync(file, JSON.stringify(this.toJSON())));
+      this.set(
+        key,
+        value as {
+          [key: string]: any;
+        }
+      );
+    exitHook(() => fs.writeFileSync(file, JSON.stringify(this.toJSON())));
   }
 }

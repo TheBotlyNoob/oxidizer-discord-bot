@@ -4,7 +4,7 @@ import { Collection } from '@/types.js';
 export default async () =>
   client.on('guildCreate', async (guild) => {
     client.db
-      .defaultGet(guild.id, new Collection<string, any>())
+      .defaultGet(guild.id, new Collection())
       .set(
         'invite',
         await (

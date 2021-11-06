@@ -2,5 +2,8 @@
   "watch": ["*"],
   "ext": "ts,json",
   "ignore": ["dist/"],
-  "exec": "npm start"
+  "exec": "npm start",
+  "env": {
+    "DEBUG": true
+  }
 }

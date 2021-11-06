@@ -16,6 +16,8 @@ export const root = resolve(dist, '..');
 process.chdir(dist);
 
 export async function require(path: string): Promise<any> {
+  log.debug(pathToFileURL(path).href);
+
   let imported = await import(String(pathToFileURL(path)));
 
   return imported?.default ?? imported;
@@ -47,11 +49,13 @@ export function restart(): never {
 if (process.env.RESTARTED === 'yes')
   log.info(`Restarted At ${chalk.yellow(new Date().toLocaleString())}`);
 
-await Promise.all(
-  (
-    await glob('handlers/**/*.js')
-  ).map(async (handler: string) => (await require(resolve(dist, handler)))())
-);
+// await Promise.all(
+//   (
+//     await glob('handlers/**/*.js')
+//   ).map(async (handler: string) => (await require(resolve(dist, handler)))())
+// );
+
+await require('./commands/__template.js');
 
 client.once('ready', async () => await onReady(client));
 

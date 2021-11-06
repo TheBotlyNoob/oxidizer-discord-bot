@@ -1,6 +1,6 @@
 import { Command } from '@/types.js';
 import { Permissions } from 'discord.js';
-import { userMention } from '@/formatters';
+import { userMention } from '@/formatters.js';
 import embed from '@/embed.js';
 
 export default () =>

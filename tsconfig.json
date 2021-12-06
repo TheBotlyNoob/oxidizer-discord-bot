@@ -17,7 +17,8 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*", "utils/*", "commands/*"]
+      "@/*": ["*", "utils/*", "commands/*"],
+      "@": ["index.ts"]
     },
     "plugins": [
       { "transform": "typescript-transform-paths" },
@@ -26,11 +27,15 @@
   },
   "exclude": ["node_modules", "dist", "**/*.d.ts"],
   "include": [
-    "main.ts",
+    "index.ts",
     "*.json",
     "utils/**/*.ts",
     "events/**/*.ts",
     "commands/**/*.ts",
-    "handlers/**/*.ts"
+    "handlers/**/*.ts",
+    "classes/log.ts",
+    "classes/dirs.ts",
+    "classes/db.ts",
+    "classes/client.ts"
   ]
 }

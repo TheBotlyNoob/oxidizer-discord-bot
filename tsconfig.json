@@ -17,7 +17,7 @@
     "rootDir": ".",
     "baseUrl": ".",
     "paths": {
-      "@/*": ["*", "utils/*", "commands/*"],
+      "@/*": ["*", "utils/*", "classes/*"],
       "@": ["index.ts"]
     },
     "plugins": [

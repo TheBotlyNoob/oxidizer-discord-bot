@@ -2,7 +2,7 @@ import { InteractionCommandClient } from 'detritus-client';
 import type { InteractionCommandClientOptions } from 'detritus-client';
 import DB from '@/db.js';
 
-export class Client extends InteractionCommandClient {
+export default class Client extends InteractionCommandClient {
   constructor(
     token: string,
     db: DB,

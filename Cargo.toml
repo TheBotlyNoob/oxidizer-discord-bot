@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.15", features = ["macros", "rt-multi-thread"]}
 dotenv = "0.15"
+resvg = "0.19"
+usvg = "0.19"
+tiny-skia = "0.6"

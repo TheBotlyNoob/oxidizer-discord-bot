@@ -2,21 +2,22 @@ pub mod svg;
 
 use dotenv::dotenv;
 use std::error::Error;
+use svg::SVG;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-    dotenv().ok();
+  dotenv().ok();
 
-    println!(
-        "{}",
-        svg::generate(
-            format!(
-                "Hello {}",
-                svg::emoji("https://emoji.gg/assets/emoji/7759-wtfsunglasses.png")
-            ),
-            None
-        )
-    );
+  println!(
+    "{}",
+    SVG::builder(None)
+      .add_text("Hello, Wolrd")
+      .add_emoji(
+        "https://scitechdaily.com/images/New-Hubble-Image-of-the-Large-Magellanic-Cloud.jpg"
+      )
+      .build()
+      .0
+  );
 
-    Ok(())
+  Ok(())
 }

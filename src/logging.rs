@@ -5,7 +5,7 @@ use std::{
   time::{SystemTime, UNIX_EPOCH},
 };
 
-pub(crate) fn init() -> Result<(), Box<dyn Error + Send + Sync>> {
+pub fn init() -> Result<(), Box<dyn Error + Send + Sync>> {
   let dir =
     env::var("CARGO_MANIFEST_DIR").unwrap_or(env::current_dir()?.to_string_lossy().to_string());
 

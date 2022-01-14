@@ -2,18 +2,18 @@ use resvg::render;
 use tiny_skia::Pixmap;
 use usvg::{FitTo, Options, Tree};
 
-pub(crate) const DEFAULT_FONT_SIZE: u8 = 8;
+pub const DEFAULT_FONT_SIZE: u8 = 8;
 
 #[derive(Clone, Debug)]
-pub(crate) struct SVG {
-  pub(crate) font_size: u8,
-  pub(crate) width: u16,
-  pub(crate) chars: u8,
-  pub(crate) data: String,
+pub struct SVG {
+  pub font_size: u8,
+  pub width: u16,
+  pub chars: u8,
+  pub data: String,
 }
 
 impl SVG {
-  pub(crate) fn builder(font_size: Option<u8>) -> Self {
+  pub fn builder(font_size: Option<u8>) -> Self {
     Self {
       font_size: font_size.unwrap_or(DEFAULT_FONT_SIZE),
       width: 0,
@@ -22,7 +22,7 @@ impl SVG {
     }
   }
 
-  pub(crate) fn add_emoji<T: AsRef<str>>(mut self, href: T) -> Self {
+  pub fn add_emoji<T: AsRef<str>>(mut self, href: T) -> Self {
     self.data.push_str(&format!(
       "<image class=\"emoji in-svg\" x=\"{}\" y=\"10\" height=\"32\" width=\"32\" href=\"{}\" />",
       self.width,
@@ -34,7 +34,7 @@ impl SVG {
     self
   }
 
-  pub(crate) fn add_text<T: AsRef<str>>(mut self, text: T) -> Self {
+  pub fn add_text<T: AsRef<str>>(mut self, text: T) -> Self {
     self.data.push_str(&format!(
       "<text class=\"text in-svg\" x=\"{}\" y=\"8\">{}</text>",
       self.width,
@@ -46,13 +46,13 @@ impl SVG {
     self
   }
 
-  pub(crate) fn add_styles<T: AsRef<str>>(mut self, styles: T) -> Self {
+  pub fn add_styles<T: AsRef<str>>(mut self, styles: T) -> Self {
     self.data = format!("<style>{}</style> {}", styles.as_ref(), self.data);
 
     self
   }
 
-  pub(crate) fn build(self) -> Built {
+  pub fn build(self) -> Built {
     let svg = format!(
       "
 <svg viewBox=\"0 0 {} 20\" xmlns=\"http://www.w3.org/2000/svg\">
@@ -92,7 +92,7 @@ impl SVG {
   }
 }
 
-pub(crate) struct Built {
-  pub(crate) svg: String,
-  pub(crate) pixmap: Pixmap,
+pub struct Built {
+  pub svg: String,
+  pub pixmap: Pixmap,
 }

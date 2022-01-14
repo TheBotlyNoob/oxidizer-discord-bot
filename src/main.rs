@@ -1,11 +1,10 @@
-pub(crate) mod logging;
+pub mod logging;
 pub mod svg;
 
 use log::*;
 
 use dotenv::dotenv;
-use std::{env, error::Error, fs};
-use svg::SVG;
+use std::{env, error::Error};
 
 use serenity::{
   async_trait,

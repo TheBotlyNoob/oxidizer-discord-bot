@@ -33,9 +33,9 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
   );
 
   // The Application Id is usually the Bot User Id.
-  let application_id: u64 = env::var("APPLICATION_ID")
+  let application_id = env::var("APPLICATION_ID")
     .expect("Expected the bot's Application ID to be in the `.env` or in the `APPLICATION_ID` environment variable")
-    .parse()
+    .parse::<u64>()
     .expect("application id is not a valid id");
 
   // Build our client.

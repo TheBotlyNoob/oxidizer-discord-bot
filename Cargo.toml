@@ -6,12 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-tokio = { version = "1.15", features = ["macros", "rt-multi-thread"]}
+tokio = { version = "1.15", features = ["macros", "rt-multi-thread"] }
 dotenv = "0.15"
-resvg = "0.19"
-usvg = "0.19"
 tiny-skia = "0.6"
-serenity = { version = "0.10", default-features = false, features = ["rustls_backend", "builder", "cache", "client", "gateway", "model", "utils", "unstable_discord_api"] }
-simplelog = { version = "0.11", features = ["paris"] }
-log = "0.4"
-time = "0.3"
+serenity = { version = "0.10", default-features = false, features = [
+  "rustls_backend",
+  "builder",
+  "cache",
+  "client",
+  "gateway",
+  "model",
+  "utils",
+  "unstable_discord_api",
+] }
+tracing-subscriber = "0.3"
+tracing = "0.1"

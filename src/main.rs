@@ -1,8 +1,3 @@
-pub mod logging;
-pub mod svg;
-
-use log::*;
-
 use dotenv::dotenv;
 use std::{env, error::Error};
 
@@ -24,9 +19,12 @@ use serenity::{
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
-  dotenv().ok();
+  dotenv()?;
 
-  logging::init().ok();
+  tracing_subscriber::fmt::fmt()
+    .pretty()
+    .without_time()
+    .init();
 
   let token = env::var("DISCORD_TOKEN").expect(
     "Expected the bot's token to be in the `.env` or in the `DISCORD_TOKEN` environment variable",
@@ -34,7 +32,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
 
   // The Application Id is usually the Bot User Id.
   let application_id = env::var("APPLICATION_ID")
-    .expect("Expected the bot's Application ID to be in the `.env` or in the `APPLICATION_ID` environment variable")
+    .expect("expected the bot's Application ID to be in the `.env` or in the `APPLICATION_ID` environment variable")
     .parse::<u64>()
     .expect("application id is not a valid id");
 
@@ -46,7 +44,7 @@ async fn main() -> Result<(), Box<dyn Error + Send + Sync>> {
     .expect("Error creating client");
 
   if let Err(why) = client.start().await {
-    error!("Client error: {:?}", why);
+    tracing::error!("Client error: {:?}", why);
   }
 
   Ok(())
@@ -87,13 +85,13 @@ impl EventHandler for Handler {
         })
         .await
       {
-        println!("Cannot respond to slash command: {}", why);
+        tracing::error!("Cannot respond to slash command: {why}");
       }
     }
   }
 
   async fn ready(&self, ctx: Context, ready: Ready) {
-    println!("{} is connected!", ready.user.name);
+    tracing::info!("{} is connected!", ready.user.name);
 
     let guild_id = GuildId(
       env::var("GUILD_ID")
@@ -171,7 +169,7 @@ impl EventHandler for Handler {
     })
     .await;
 
-    println!(
+    tracing::info!(
       "I now have the following guild slash commands: {:#?}",
       commands
     );
@@ -184,7 +182,7 @@ impl EventHandler for Handler {
       })
       .await;
 
-    println!(
+    tracing::info!(
       "I created the following global slash command: {:#?}",
       guild_command
     );

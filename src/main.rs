@@ -1,5 +1,6 @@
 use once_cell::sync::Lazy;
 use std::env;
+use tracing_unwrap::ResultExt;
 
 use serenity::{
   async_trait,
@@ -18,21 +19,22 @@ use tracing::{error, info};
 
 pub static USE_GUILD_COMMANDS: Lazy<bool> =
   Lazy::new(|| env::var("TESTING").is_ok() || cfg!(debug_assertions));
-pub static DISCORD_TOKEN: Lazy<String> =
-  Lazy::new(|| env::var("DISCORD_TOKEN").expect("Expected `DISCORD_TOKEN` in the environment."));
+pub static DISCORD_TOKEN: Lazy<String> = Lazy::new(|| {
+  env::var("DISCORD_TOKEN").expect_or_log("Expected `DISCORD_TOKEN` in the environment.")
+});
 pub static GUILD_ID: Lazy<GuildId> = Lazy::new(|| {
   GuildId::from(
     env::var("GUILD_ID")
-      .expect("Expected `GUILD_ID` in the environment.")
+      .expect_or_log("Expected `GUILD_ID` in the environment.")
       .parse::<u64>()
-      .expect("Expected `GUILD_ID` to be a number."),
+      .expect_or_log("Expected `GUILD_ID` to be a number."),
   )
 });
 pub static APPLICATION_ID: Lazy<u64> = Lazy::new(|| {
   env::var("APPLICATION_ID")
-    .expect("Expected `APPLICATION_ID` in the environment.")
+    .expect_or_log("Expected `APPLICATION_ID` in the environment.")
     .parse()
-    .expect("Expected `APPLICATION_ID` to be a number.")
+    .expect_or_log("Expected `APPLICATION_ID` to be a number.")
 });
 
 struct Handler;
@@ -69,11 +71,11 @@ impl EventHandler for Handler {
       GUILD_ID
         .set_application_commands(&ctx.http, create_commands)
         .await
-        .expect("Error setting guild commands.");
+        .expect_or_log("Error setting guild commands.");
     } else {
       ApplicationCommand::set_global_application_commands(&ctx.http, create_commands)
         .await
-        .expect("Error setting global commands.");
+        .expect_or_log("Error setting global commands.");
     }
   }
 }
@@ -89,7 +91,7 @@ async fn main() {
     .event_handler(Handler)
     .application_id(*APPLICATION_ID)
     .await
-    .expect("Error creating client");
+    .expect_or_log("Error creating client");
 
   if *USE_GUILD_COMMANDS {
     for command_id in client
@@ -97,14 +99,14 @@ async fn main() {
       .http
       .get_guild_application_commands(*GUILD_ID.as_u64())
       .await
-      .expect("Error getting application commands")
+      .expect_or_log("Error getting application commands")
     {
       client
         .cache_and_http
         .http
         .delete_guild_application_command(*GUILD_ID.as_u64(), *command_id.id.as_u64())
         .await
-        .expect("Error deleting global application command");
+        .expect_or_log("Error deleting global application command");
     }
 
     for command_id in client
@@ -112,14 +114,14 @@ async fn main() {
       .http
       .get_global_application_commands()
       .await
-      .expect("Error getting application commands")
+      .expect_or_log("Error getting application commands")
     {
       client
         .cache_and_http
         .http
         .delete_global_application_command(*command_id.id.as_u64())
         .await
-        .expect("Error deleting global application command");
+        .expect_or_log("Error deleting global application command");
     }
   }
 

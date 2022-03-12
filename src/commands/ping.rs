@@ -27,9 +27,8 @@ fn handle_command(
         response
           .kind(InteractionResponseType::ChannelMessageWithSource)
           .interaction_response_data(|message| {
-            message.create_embed(|embed| {
-              embed.image("https://c.tenor.com/2pvm9cdoGtUAAAAC/entrance-confident.gif")
-            })
+            message
+              .create_embed(|embed| embed.image("https://c.tenor.com/sm4dtXGkfnoAAAAC/catpong.gif"))
           })
       })
       .await

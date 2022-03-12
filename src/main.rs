@@ -14,7 +14,10 @@ use serenity::{
 
 pub mod commands;
 
-pub const USE_GUILD_COMMANDS: bool = cfg!(debug_assertions);
+use tracing::{error, info};
+
+pub static USE_GUILD_COMMANDS: Lazy<bool> =
+  Lazy::new(|| env::var("TESTING").is_ok() || cfg!(debug_assertions));
 pub static DISCORD_TOKEN: Lazy<String> =
   Lazy::new(|| env::var("DISCORD_TOKEN").expect("Expected `DISCORD_TOKEN` in the environment."));
 pub static GUILD_ID: Lazy<GuildId> = Lazy::new(|| {
@@ -51,7 +54,7 @@ impl EventHandler for Handler {
   }
 
   async fn ready(&self, ctx: Context, ready: Ready) {
-    println!("{} is connected!", ready.user.name);
+    info!("{} is connected!", ready.user.name);
 
     let create_commands: fn(&mut CreateApplicationCommands) -> &mut CreateApplicationCommands =
       |commands| {
@@ -62,34 +65,24 @@ impl EventHandler for Handler {
         commands
       };
 
-    let commands = if USE_GUILD_COMMANDS {
+    if *USE_GUILD_COMMANDS {
       GUILD_ID
         .set_application_commands(&ctx.http, create_commands)
         .await
+        .expect("Error setting guild commands.");
     } else {
-      ApplicationCommand::set_global_application_commands(&ctx.http, create_commands).await
-    };
-
-    println!("I now have the following slash commands: {:#?}", commands);
-
-    // let guild_command =
-    //   ApplicationCommand::create_global_application_command(&ctx.http, |command| {
-    //     command
-    //       .name("wonderful_command")
-    //       .description("An amazing command")
-    //   })
-    //   .await;
-
-    // println!(
-    //   "I created the following global slash command: {:#?}",
-    //   guild_command
-    // );
+      ApplicationCommand::set_global_application_commands(&ctx.http, create_commands)
+        .await
+        .expect("Error setting global commands.");
+    }
   }
 }
 
 #[tokio::main]
 async fn main() {
   dotenv::dotenv().ok();
+
+  tracing_subscriber::fmt().without_time().pretty().init();
 
   // Build our client.
   let mut client = Client::builder(&*DISCORD_TOKEN)
@@ -98,8 +91,7 @@ async fn main() {
     .await
     .expect("Error creating client");
 
-  #[cfg(debug_assertions)]
-  {
+  if *USE_GUILD_COMMANDS {
     for command_id in client
       .cache_and_http
       .http
@@ -136,6 +128,6 @@ async fn main() {
   // Shards will automatically attempt to reconnect, and will perform
   // exponential backoff until it reconnects.
   if let Err(why) = client.start().await {
-    println!("Client error: {:?}", why);
+    error!("Client error: {:?}", why);
   }
 }

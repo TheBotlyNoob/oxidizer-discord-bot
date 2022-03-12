@@ -571,6 +571,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
+name = "oxidizer-discord-bot"
+version = "0.1.0"
+dependencies = [
+ "dotenv",
+ "once_cell",
+ "serenity",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "tracing-unwrap",
+]
+
+[[package]]
 name = "percent-encoding"
 version = "2.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -613,19 +626,6 @@ name = "ppv-lite86"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "eb9f9e6e233e5c4a35559a617bf40a4ec447db2e84c20b55a6f83167b7e57872"
-
-[[package]]
-name = "principal-discord-bot"
-version = "0.1.0"
-dependencies = [
- "dotenv",
- "once_cell",
- "serenity",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "tracing-unwrap",
-]
 
 [[package]]
 name = "proc-macro2"

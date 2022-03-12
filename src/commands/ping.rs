@@ -5,6 +5,8 @@ use serenity::{
   },
 };
 
+use tracing::error;
+
 pub static COMMAND_DATA: (&str, super::AddCommandHandler, super::CommandHandler) = (
   "ping",
   |commands| {
@@ -24,11 +26,15 @@ fn handle_command(
       .create_interaction_response(&ctx.http, |response| {
         response
           .kind(InteractionResponseType::ChannelMessageWithSource)
-          .interaction_response_data(|message| message.content("Hwllo!"))
+          .interaction_response_data(|message| {
+            message.create_embed(|embed| {
+              embed.image("https://c.tenor.com/2pvm9cdoGtUAAAAC/entrance-confident.gif")
+            })
+          })
       })
       .await
     {
-      println!("Cannot respond to slash command: {}", why);
+      error!("Cannot respond to slash command: {}", why);
     }
   })
 }

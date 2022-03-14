@@ -1,5 +1,5 @@
 use once_cell::sync::Lazy;
-use std::env;
+use std::{env, future::Future, pin::Pin};
 use tracing_unwrap::ResultExt;
 
 use serenity::{
@@ -8,7 +8,10 @@ use serenity::{
   model::{
     gateway::Ready,
     id::GuildId,
-    interactions::{application_command::ApplicationCommand, Interaction},
+    interactions::{
+      application_command::{ApplicationCommand, ApplicationCommandInteraction},
+      Interaction,
+    },
   },
   prelude::*,
 };
@@ -133,3 +136,11 @@ async fn main() {
     error!("Client error: {:?}", why);
   }
 }
+
+pub type AddCommandHandler = fn(&mut CreateApplicationCommands) -> &mut CreateApplicationCommands;
+pub type CommandHandler =
+  for<'a> fn(Context, ApplicationCommandInteraction, &'a ()) -> DynFuture<'a, ()>;
+
+pub type DynFuture<'a, T> = Pin<Box<dyn Future<Output = T> + 'a + Send>>;
+
+pub type Command = (&'static str, AddCommandHandler, CommandHandler);

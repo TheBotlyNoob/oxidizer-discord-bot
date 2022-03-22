@@ -1,86 +1,53 @@
-use once_cell::sync::Lazy;
-use std::{env, future::Future, pin::Pin};
+use static_init::dynamic;
+use std::{env, error::Error as StdError};
 use tracing_unwrap::ResultExt;
 
-use serenity::{
-  async_trait,
-  builder::CreateApplicationCommands,
-  model::{
-    gateway::Ready,
-    id::GuildId,
-    interactions::{
-      application_command::{ApplicationCommand, ApplicationCommandInteraction},
-      Interaction,
-    },
-  },
-  prelude::*,
-};
+use poise::serenity_prelude as serenity;
 
 pub mod commands;
 
-use tracing::{error, info};
+pub struct Data {}
 
-pub static USE_GUILD_COMMANDS: Lazy<bool> =
-  Lazy::new(|| env::var("TESTING").is_ok() || cfg!(debug_assertions));
-pub static DISCORD_TOKEN: Lazy<String> = Lazy::new(|| {
-  env::var("DISCORD_TOKEN").expect_or_log("Expected `DISCORD_TOKEN` in the environment.")
-});
-pub static GUILD_ID: Lazy<GuildId> = Lazy::new(|| {
-  GuildId::from(
-    env::var("GUILD_ID")
-      .expect_or_log("Expected `GUILD_ID` in the environment.")
-      .parse::<u64>()
-      .expect_or_log("Expected `GUILD_ID` to be a number."),
-  )
-});
-pub static APPLICATION_ID: Lazy<u64> = Lazy::new(|| {
-  env::var("APPLICATION_ID")
-    .expect_or_log("Expected `APPLICATION_ID` in the environment.")
-    .parse()
-    .expect_or_log("Expected `APPLICATION_ID` to be a number.")
-});
+pub type Error = Box<dyn StdError + Send + Sync>;
+pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-struct Handler;
+#[dynamic(lazy)]
+pub static TESTING: bool = env::var("TESTING").is_ok() || cfg!(debug_assertions);
 
-#[async_trait]
-impl EventHandler for Handler {
-  async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-    if let Interaction::ApplicationCommand(input) = interaction {
-      if let Some(handler) = commands::COMMANDS.iter().find_map(|command| {
-        if command.0 == input.data.name.as_str() {
-          Some(command.2)
-        } else {
-          None
-        }
-      }) {
-        (handler)(ctx, input, &()).await;
-      }
-    }
-  }
+#[dynamic(lazy)]
+pub static TOKEN: String =
+  env::var("DISCORD_TOKEN").expect_or_log("Expected `DISCORD_TOKEN` in the environment.");
 
-  async fn ready(&self, ctx: Context, ready: Ready) {
-    info!("{} is connected!", ready.user.name);
+#[dynamic(lazy)]
+pub static GUILD_ID: serenity::GuildId = serenity::GuildId::from(
+  env::var("GUILD_ID")
+    .expect_or_log("Expected `GUILD_ID` in the environment.")
+    .parse::<u64>()
+    .expect_or_log("Expected `GUILD_ID` to be a number."),
+);
 
-    let create_commands: fn(&mut CreateApplicationCommands) -> &mut CreateApplicationCommands =
-      |commands| {
-        for command in commands::COMMANDS {
-          (command.1)(commands);
-        }
+#[dynamic(lazy)]
+pub static APPLICATION_ID: u64 = env::var("APPLICATION_ID")
+  .expect_or_log("Expected `APPLICATION_ID` in the environment.")
+  .parse()
+  .expect_or_log("Expected `APPLICATION_ID` to be a number.");
 
-        commands
-      };
+/// Display your or another user's account creation date
+#[poise::command(prefix_command, slash_command, track_edits)]
+async fn age(
+  ctx: Context<'_>,
+  #[description = "Selected user"] user: Option<serenity::User>,
+) -> Result<(), Error> {
+  let user = user.as_ref().unwrap_or_else(|| ctx.author());
+  ctx
+    .say(format!(
+      "{}'s account was created at {}",
+      user.name,
+      user.created_at()
+    ))
+    .await?;
 
-    if *USE_GUILD_COMMANDS {
-      GUILD_ID
-        .set_application_commands(&ctx.http, create_commands)
-        .await
-        .expect_or_log("Error setting guild commands.");
-    } else {
-      ApplicationCommand::set_global_application_commands(&ctx.http, create_commands)
-        .await
-        .expect_or_log("Error setting global commands.");
-    }
-  }
+  Ok(())
 }
 
 #[tokio::main]
@@ -89,58 +56,61 @@ async fn main() {
 
   tracing_subscriber::fmt().without_time().pretty().init();
 
-  // Build our client.
-  let mut client = Client::builder(&*DISCORD_TOKEN)
-    .event_handler(Handler)
-    .application_id(*APPLICATION_ID)
+  poise::Framework::build()
+    .token(&*TOKEN)
+    .user_data_setup(move |ctx, _ready, _framework| {
+      Box::pin(async move {
+        let application_commands = poise::builtins::create_application_commands(&[age()]);
+
+        if *TESTING {
+          for command_id in ctx
+            .http
+            .get_guild_application_commands(*GUILD_ID.as_u64())
+            .await
+            .expect_or_log("Error getting application commands")
+          {
+            ctx
+              .http
+              .delete_guild_application_command(*GUILD_ID.as_u64(), *command_id.id.as_u64())
+              .await
+              .expect_or_log("Error deleting global application command");
+          }
+
+          for command_id in ctx
+            .http
+            .get_global_application_commands()
+            .await
+            .expect_or_log("Error getting application commands")
+          {
+            ctx
+              .http
+              .delete_global_application_command(*command_id.id.as_u64())
+              .await
+              .expect_or_log("Error deleting global application command");
+          }
+
+          GUILD_ID
+            .set_application_commands(&ctx.http, |b| {
+              *b = application_commands;
+              b
+            })
+            .await?;
+        } else {
+          serenity::ApplicationCommand::set_global_application_commands(&ctx.http, |b| {
+            *b = application_commands;
+            b
+          })
+          .await?;
+        }
+
+        Ok(Data {})
+      })
+    })
+    .options(poise::FrameworkOptions {
+      commands: vec![age()],
+      ..Default::default()
+    })
+    .run()
     .await
-    .expect_or_log("Error creating client");
-
-  if *USE_GUILD_COMMANDS {
-    for command_id in client
-      .cache_and_http
-      .http
-      .get_guild_application_commands(*GUILD_ID.as_u64())
-      .await
-      .expect_or_log("Error getting application commands")
-    {
-      client
-        .cache_and_http
-        .http
-        .delete_guild_application_command(*GUILD_ID.as_u64(), *command_id.id.as_u64())
-        .await
-        .expect_or_log("Error deleting global application command");
-    }
-
-    for command_id in client
-      .cache_and_http
-      .http
-      .get_global_application_commands()
-      .await
-      .expect_or_log("Error getting application commands")
-    {
-      client
-        .cache_and_http
-        .http
-        .delete_global_application_command(*command_id.id.as_u64())
-        .await
-        .expect_or_log("Error deleting global application command");
-    }
-  }
-
-  // Finally, start a single shard, and start listening to events.
-  //
-  // Shards will automatically attempt to reconnect, and will perform
-  // exponential backoff until it reconnects.
-  if let Err(why) = client.start().await {
-    error!("Client error: {:?}", why);
-  }
+    .unwrap_or_log();
 }
-
-pub type AddCommandHandler = fn(&mut CreateApplicationCommands) -> &mut CreateApplicationCommands;
-pub type CommandHandler =
-  for<'a> fn(Context, ApplicationCommandInteraction, &'a ()) -> DynFuture<'a, ()>;
-
-pub type DynFuture<'a, T> = Pin<Box<dyn Future<Output = T> + 'a + Send>>;
-
-pub type Command = (&'static str, AddCommandHandler, CommandHandler);

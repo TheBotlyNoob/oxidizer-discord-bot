@@ -1,36 +1,52 @@
-use static_init::dynamic;
-use std::{env, error::Error as StdError};
+use once_cell::sync::Lazy;
+use std::{env, error::Error as StdError, fmt::Display};
 use tracing_unwrap::ResultExt;
 
-use poise::serenity_prelude as serenity;
+pub use poise::serenity_prelude as serenity;
 
 pub mod commands;
 
-pub struct Data {}
+pub struct Data;
+
+#[derive(Debug)]
+pub struct NoneError;
+impl<T> From<Option<T>> for NoneError {
+  fn from(_: Option<T>) -> Self {
+    NoneError
+  }
+}
+impl Display for NoneError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "None")
+  }
+}
+impl StdError for NoneError {}
 
 pub type Error = Box<dyn StdError + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-#[dynamic(lazy)]
-pub static TESTING: bool = env::var("TESTING").is_ok() || cfg!(debug_assertions);
+pub static TESTING: Lazy<bool> =
+  Lazy::new(|| env::var("TESTING").is_ok() || cfg!(debug_assertions));
 
-#[dynamic(lazy)]
-pub static TOKEN: String =
-  env::var("DISCORD_TOKEN").expect_or_log("Expected `DISCORD_TOKEN` in the environment.");
+pub static TOKEN: Lazy<String> = Lazy::new(|| {
+  env::var("DISCORD_TOKEN").expect_or_log("Expected `DISCORD_TOKEN` in the environment.")
+});
 
-#[dynamic(lazy)]
-pub static GUILD_ID: serenity::GuildId = serenity::GuildId::from(
-  env::var("GUILD_ID")
-    .expect_or_log("Expected `GUILD_ID` in the environment.")
-    .parse::<u64>()
-    .expect_or_log("Expected `GUILD_ID` to be a number."),
-);
+pub static GUILD_ID: Lazy<serenity::GuildId> = Lazy::new(|| {
+  serenity::GuildId::from(
+    env::var("GUILD_ID")
+      .expect_or_log("Expected `GUILD_ID` in the environment.")
+      .parse::<u64>()
+      .expect_or_log("Expected `GUILD_ID` to be a number."),
+  )
+});
 
-#[dynamic(lazy)]
-pub static APPLICATION_ID: u64 = env::var("APPLICATION_ID")
-  .expect_or_log("Expected `APPLICATION_ID` in the environment.")
-  .parse()
-  .expect_or_log("Expected `APPLICATION_ID` to be a number.");
+pub static APPLICATION_ID: Lazy<u64> = Lazy::new(|| {
+  env::var("APPLICATION_ID")
+    .expect_or_log("Expected `APPLICATION_ID` in the environment.")
+    .parse()
+    .expect_or_log("Expected `APPLICATION_ID` to be a number.")
+});
 
 /// Display your or another user's account creation date
 #[poise::command(prefix_command, slash_command, track_edits)]
@@ -60,7 +76,8 @@ async fn main() {
     .token(&*TOKEN)
     .user_data_setup(move |ctx, _ready, _framework| {
       Box::pin(async move {
-        let application_commands = poise::builtins::create_application_commands(&[age()]);
+        let application_commands =
+          poise::builtins::create_application_commands(&commands::get_commands());
 
         if *TESTING {
           for command_id in ctx
@@ -103,11 +120,11 @@ async fn main() {
           .await?;
         }
 
-        Ok(Data {})
+        Ok(Data)
       })
     })
     .options(poise::FrameworkOptions {
-      commands: vec![age()],
+      commands: commands::get_commands(),
       ..Default::default()
     })
     .run()

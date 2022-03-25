@@ -1,1 +1,2 @@
-pub mod ban;
+mod ban;
+pub use ban::ban;

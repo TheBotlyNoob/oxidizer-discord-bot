@@ -77,7 +77,7 @@ async fn main() {
     .user_data_setup(move |ctx, _ready, _framework| {
       Box::pin(async move {
         let application_commands =
-          poise::builtins::create_application_commands(&commands::get_commands());
+          poise::builtins::create_application_commands(&commands::COMMANDS());
 
         if *TESTING {
           for command_id in ctx
@@ -124,10 +124,23 @@ async fn main() {
       })
     })
     .options(poise::FrameworkOptions {
-      commands: commands::get_commands(),
+      commands: commands::COMMANDS(),
       ..Default::default()
     })
     .run()
     .await
     .unwrap_or_log();
 }
+
+pub fn cache_http<'a>(ctx: &Context<'a>) -> impl serenity::CacheHttp + 'a {
+  (&ctx.discord().cache, &*ctx.discord().http)
+}
+
+#[derive(Debug)]
+pub struct StringError(String);
+impl Display for StringError {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "{}", self.0)
+  }
+}
+impl StdError for StringError {}

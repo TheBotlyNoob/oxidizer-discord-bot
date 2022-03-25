@@ -1,8 +1,10 @@
 pub mod general;
 pub mod moderation;
 
-pub static COMMANDS: &[fn() -> poise::Command<crate::Data, crate::Error>] = &[general::ping];
-
-pub fn get_commands() -> Vec<poise::Command<crate::Data, crate::Error>> {
-  COMMANDS.iter().map(|f| f()).collect()
-}
+pub static COMMANDS: fn() -> Vec<poise::Command<crate::Data, crate::Error>> = || {
+  vec![
+    general::ping(),
+    moderation::ban(),
+    general::add_reaction_role(),
+  ]
+};

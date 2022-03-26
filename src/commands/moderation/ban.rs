@@ -13,7 +13,7 @@ pub async fn ban(
 
   ctx
     .guild_id()
-    .unwrap_or_log()
+    .ok_or(crate::NoneError)?
     .ban_with_reason(
       &ctx.discord().http,
       &user,

@@ -1,7 +1,6 @@
 use crate::serenity::ReactionType;
 use once_cell::sync::Lazy;
 use poise::futures_util::StreamExt;
-use tracing_unwrap::ResultExt;
 
 static REGEX: Lazy<regex::Regex> = Lazy::new(|| regex::Regex::new(r"^<:.*?:(\d*?)>").unwrap());
 
@@ -14,7 +13,7 @@ pub async fn add_reaction_role(
   emoji: String,
   #[description = "The role to add"] role_id: String,
 ) -> Result<(), crate::Error> {
-  let guild = ctx.guild().unwrap();
+  let guild = ctx.guild().ok_or(crate::NoneError)?;
   let message_id = message_id.parse::<u64>()?;
   let role_id = role_id.parse::<u64>()?;
 
@@ -64,10 +63,7 @@ pub async fn add_reaction_role(
           continue;
         }
 
-        member
-          .add_role(&ctx.discord().http, role.id)
-          .await
-          .unwrap_or_log();
+        member.add_role(&ctx.discord().http, role.id).await?;
       }
       crate::serenity::ReactionAction::Removed(reaction) if reaction.emoji == emoji => {
         let user = reaction.user(crate::cache_http(&ctx)).await?;
@@ -77,10 +73,7 @@ pub async fn add_reaction_role(
           continue;
         }
 
-        member
-          .remove_role(&ctx.discord().http, role.id)
-          .await
-          .unwrap_or_log();
+        member.remove_role(&ctx.discord().http, role.id).await?;
       }
       _ => (),
     }

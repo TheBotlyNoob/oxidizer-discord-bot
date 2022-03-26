@@ -1,12 +1,16 @@
 use once_cell::sync::Lazy;
-use std::{env, error::Error as StdError, fmt::Display};
-use tracing_unwrap::ResultExt;
+use poise::serenity_prelude::GuildId;
+use std::{collections::BTreeMap, env, error::Error as StdError, fmt::Display};
+use tokio::sync::Mutex;
+use tracing_unwrap::{OptionExt, ResultExt};
 
 pub use poise::serenity_prelude as serenity;
 
 pub mod commands;
 
-pub struct Data;
+pub struct Data {
+  pub guild_storage: Mutex<BTreeMap<GuildId, serenity_guild_storage::Storage<String>>>,
+}
 
 #[derive(Debug)]
 pub struct NoneError;
@@ -47,24 +51,6 @@ pub static APPLICATION_ID: Lazy<u64> = Lazy::new(|| {
     .parse()
     .expect_or_log("Expected `APPLICATION_ID` to be a number.")
 });
-
-/// Display your or another user's account creation date
-#[poise::command(prefix_command, slash_command, track_edits)]
-async fn age(
-  ctx: Context<'_>,
-  #[description = "Selected user"] user: Option<serenity::User>,
-) -> Result<(), Error> {
-  let user = user.as_ref().unwrap_or_else(|| ctx.author());
-  ctx
-    .say(format!(
-      "{}'s account was created at {}",
-      user.name,
-      user.created_at()
-    ))
-    .await?;
-
-  Ok(())
-}
 
 #[tokio::main]
 async fn main() {
@@ -120,11 +106,35 @@ async fn main() {
           .await?;
         }
 
-        Ok(Data)
+        Ok(Data {
+          guild_storage: Mutex::new(BTreeMap::new()),
+        })
       })
     })
     .options(poise::FrameworkOptions {
       commands: commands::COMMANDS(),
+      pre_command: |ctx| {
+        Box::pin(async move {
+          let mut guild_storage = ctx.data().guild_storage.lock().await;
+
+          if let Some(guild_storage) = guild_storage.get_mut(&ctx.guild_id().unwrap_or_log()) {
+            guild_storage
+              .get_latest_from_channel()
+              .await
+              .unwrap_or_log();
+          } else {
+            guild_storage.insert(
+              ctx.guild_id().unwrap_or_log(),
+              serenity_guild_storage::Storage::new(
+                ctx.guild().unwrap(),
+                Box::new(to_owned(ctx.discord())),
+              )
+              .await
+              .unwrap_or_log(),
+            );
+          }
+        })
+      },
       ..Default::default()
     })
     .run()
@@ -134,6 +144,10 @@ async fn main() {
 
 pub fn cache_http<'a>(ctx: &Context<'a>) -> impl serenity::CacheHttp + 'a {
   (&ctx.discord().cache, &*ctx.discord().http)
+}
+
+fn to_owned<T>(x: &T) -> T {
+  unsafe { std::ptr::read(x as *const _) }
 }
 
 #[derive(Debug)]

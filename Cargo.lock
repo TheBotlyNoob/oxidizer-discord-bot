@@ -767,6 +767,7 @@ dependencies = [
  "poise",
  "regex",
  "resvg",
+ "serde",
  "serenity-guild-storage",
  "tokio",
  "tracing",
@@ -1029,6 +1030,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ron"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1b861ecaade43ac97886a512b360d01d66be9f41f3c61088b42cedf92e03d678"
+dependencies = [
+ "base64",
+ "bitflags",
+ "serde",
+]
+
+[[package]]
 name = "roxmltree"
 version = "0.14.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1189,8 +1201,9 @@ dependencies = [
 [[package]]
 name = "serenity-guild-storage"
 version = "0.1.0"
-source = "git+https://github.com/TheBotlyNoob/serenity-guild-storage#7857043c7001e7c5f6cdc8473ee1e1ce901e1137"
 dependencies = [
+ "ron",
+ "serde",
  "serenity",
 ]
 

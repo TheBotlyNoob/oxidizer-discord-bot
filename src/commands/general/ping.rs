@@ -1,6 +1,8 @@
+use crate::command_prelude::*;
+
 /// Check if the bot is alive
 #[poise::command(slash_command)]
-pub async fn ping(ctx: crate::Context<'_>) -> Result<(), crate::Error> {
+pub(crate) async fn ping(ctx: Context<'_>) -> Result<()> {
   ctx
     .send(|m| {
       m.embed(|e| {

@@ -1,2 +1,2 @@
 mod ban;
-pub use ban::ban;
+pub(crate) use ban::ban;

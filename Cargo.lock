@@ -1189,7 +1189,7 @@ dependencies = [
 [[package]]
 name = "serenity-guild-storage"
 version = "0.1.0"
-source = "git+https://github.com/TheBotlyNoob/serenity-guild-storage#6ab6b5ab2e30eac43f31f89d802e4230ae608462"
+source = "git+https://github.com/TheBotlyNoob/serenity-guild-storage#7857043c7001e7c5f6cdc8473ee1e1ce901e1137"
 dependencies = [
  "serenity",
 ]

@@ -1,55 +1,61 @@
+#![feature(iter_intersperse)]
+
 use once_cell::sync::Lazy;
+use poise::futures_util::future::join_all;
 use poise::serenity_prelude::GuildId;
-use std::{collections::BTreeMap, env, error::Error as StdError, fmt::Display};
+use std::{
+  collections::BTreeMap,
+  env,
+  error::Error as StdError,
+  fmt::{Debug, Display, Formatter, Result as FmtResult},
+};
 use tokio::sync::Mutex;
 use tracing_unwrap::{OptionExt, ResultExt};
 
-pub use poise::serenity_prelude as serenity;
+pub(crate) use poise::serenity_prelude as serenity;
 
-pub mod commands;
+pub(crate) mod commands;
 
-pub struct Data {
-  pub guild_storage: Mutex<BTreeMap<GuildId, serenity_guild_storage::Storage<String>>>,
+pub(crate) struct Data {
+  pub(crate) guild_storage: Mutex<BTreeMap<GuildId, serenity_guild_storage::Storage<String>>>,
 }
 
-#[derive(Debug)]
-pub struct NoneError;
-impl<T> From<Option<T>> for NoneError {
-  fn from(_: Option<T>) -> Self {
-    NoneError
+impl Data {
+  pub(crate) fn new() -> Self {
+    Self {
+      guild_storage: Mutex::new(BTreeMap::new()),
+    }
   }
 }
-impl Display for NoneError {
+
+impl Default for Data {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+impl Debug for Data {
   fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "None")
+    write!(f, "Data {{ guild_storage: {{ ... }} }}")
   }
 }
-impl StdError for NoneError {}
 
-pub type Error = Box<dyn StdError + Send + Sync>;
-pub type Context<'a> = poise::Context<'a, Data, Error>;
+pub(crate) type Context<'a> = poise::Context<'a, Data, Error>;
 
-pub static TESTING: Lazy<bool> =
+pub(crate) static TESTING: Lazy<bool> =
   Lazy::new(|| env::var("TESTING").is_ok() || cfg!(debug_assertions));
 
-pub static TOKEN: Lazy<String> = Lazy::new(|| {
+pub(crate) static TOKEN: Lazy<String> = Lazy::new(|| {
   env::var("DISCORD_TOKEN").expect_or_log("Expected `DISCORD_TOKEN` in the environment.")
 });
 
-pub static GUILD_ID: Lazy<serenity::GuildId> = Lazy::new(|| {
+pub(crate) static GUILD_ID: Lazy<serenity::GuildId> = Lazy::new(|| {
   serenity::GuildId::from(
     env::var("GUILD_ID")
       .expect_or_log("Expected `GUILD_ID` in the environment.")
       .parse::<u64>()
       .expect_or_log("Expected `GUILD_ID` to be a number."),
   )
-});
-
-pub static APPLICATION_ID: Lazy<u64> = Lazy::new(|| {
-  env::var("APPLICATION_ID")
-    .expect_or_log("Expected `APPLICATION_ID` in the environment.")
-    .parse()
-    .expect_or_log("Expected `APPLICATION_ID` to be a number.")
 });
 
 #[tokio::main]
@@ -106,9 +112,7 @@ async fn main() {
           .await?;
         }
 
-        Ok(Data {
-          guild_storage: Mutex::new(BTreeMap::new()),
-        })
+        Ok(Data::new())
       })
     })
     .options(poise::FrameworkOptions {
@@ -127,11 +131,48 @@ async fn main() {
               ctx.guild_id().unwrap_or_log(),
               serenity_guild_storage::Storage::new(
                 ctx.guild().unwrap(),
-                Box::new(to_owned(ctx.discord())),
+                Box::new(unsafe { to_owned(ctx.discord()) }),
               )
               .await
               .unwrap_or_log(),
             );
+          }
+        })
+      },
+      on_error: |err| {
+        Box::pin(async move {
+          use poise::FrameworkError::*;
+          match err {
+            Listener { event, error } => {
+              tracing::error!(?error, "on {:#?}", event);
+            }
+            Command { error, ctx } => {
+              tracing::error!(?error, "error on a command");
+
+              let owners = join_all(
+                ctx
+                  .framework()
+                  .options()
+                  .owners
+                  .iter()
+                  .map(|o| async { o.to_user(cache_http(&ctx)).await.unwrap_or_log().tag() }),
+              )
+              .await
+              .join(", ");
+
+              ctx
+                .send(|m| {
+                  m.embed(|e| {
+                    e.title("Error")
+                      .description(format!("```rust\n{:#?}\n```", error))
+                      .footer(|f| f.text(format!("Please DM my owners at: {}", owners)))
+                  })
+                  .ephemeral(true)
+                })
+                .await
+                .unwrap_or_log();
+            }
+            _ => tracing::error!(?err),
           }
         })
       },
@@ -142,19 +183,71 @@ async fn main() {
     .unwrap_or_log();
 }
 
-pub fn cache_http<'a>(ctx: &Context<'a>) -> impl serenity::CacheHttp + 'a {
+pub(crate) fn cache_http<'a>(ctx: &Context<'a>) -> impl serenity::CacheHttp + 'a {
   (&ctx.discord().cache, &*ctx.discord().http)
 }
 
-fn to_owned<T>(x: &T) -> T {
-  unsafe { std::ptr::read(x as *const _) }
+pub(crate) unsafe fn to_owned<T>(x: &T) -> T {
+  std::ptr::read(x as *const _)
 }
 
+pub(crate) type Result<T> = std::result::Result<T, Error>;
+
 #[derive(Debug)]
-pub struct StringError(String);
-impl Display for StringError {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "{}", self.0)
+pub(crate) enum ErrorKind {
+  InvalidEmoji(String),
+  GuildWasNone,
+  Other(Box<dyn StdError>),
+}
+impl Display for ErrorKind {
+  fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    match self {
+      Self::InvalidEmoji(s) => write!(f, "An invalid emoji was given: {}", s),
+      Self::GuildWasNone => write!(f, "A Guild was none"),
+      Self::Other(s) => write!(f, "Other error: {}", s),
+    }
   }
 }
-impl StdError for StringError {}
+impl StdError for ErrorKind {}
+
+#[derive(Debug)]
+pub(crate) struct Error {
+  location: Option<String>,
+  kind: ErrorKind,
+}
+
+impl Display for Error {
+  fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+    write!(
+      f,
+      "{}{}",
+      self.kind,
+      if let Some(location) = self.location {
+        format!(" at {}", location)
+      } else {
+        String::new()
+      }
+    )
+  }
+}
+impl StdError for Error {
+  fn source(&self) -> Option<&(dyn StdError + 'static)> {
+    Some(&self.kind)
+  }
+}
+
+#[macro_export]
+macro_rules! get_location {
+  () => {
+    format!("{}:{}:{}", file!(), line!(), column!())
+  };
+}
+
+#[allow(unused_imports)]
+mod command_prelude {
+  pub(crate) use crate::{cache_http, get_location, to_owned, Context, Error, ErrorKind, Result};
+  pub(crate) use poise::futures_util::{future::join_all, Stream, StreamExt};
+  pub(crate) use poise::serenity_prelude as serenity;
+  pub(crate) use std::result::Result as StdResult;
+  pub(crate) use tracing_unwrap::{OptionExt, ResultExt};
+}

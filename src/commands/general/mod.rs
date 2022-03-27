@@ -1,5 +1,5 @@
 mod ping;
-pub use ping::ping;
+pub(crate) use ping::ping;
 
 mod reaction_roles;
-pub use reaction_roles::add_reaction_role;
+pub(crate) use reaction_roles::add_reaction_role;

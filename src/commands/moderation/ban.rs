@@ -1,19 +1,19 @@
-use tracing_unwrap::OptionExt;
+use crate::command_prelude::*;
 
 #[poise::command(slash_command)]
-pub async fn ban(
-  ctx: crate::Context<'_>,
-  #[description = "The user to ban"] user: crate::serenity::Member,
+pub(crate) async fn ban(
+  ctx: Context<'_>,
+  #[description = "The user to ban"] user: serenity::Member,
   #[description = "How much of the message history to delete in days (default is 1)"]
   #[autocomplete = "autocomplete"]
   delete_messages: Option<u32>,
   #[description = "Why you want to ban the user"] reason: Option<String>,
-) -> Result<(), crate::Error> {
+) -> Result<()> {
   let reason = reason.unwrap_or_else(|| "(No reason given)".to_owned());
 
   ctx
     .guild_id()
-    .ok_or(crate::NoneError)?
+    .ok_or(ErrorKind::GuildWasNone)?
     .ban_with_reason(
       &ctx.discord().http,
       &user,
@@ -24,9 +24,9 @@ pub async fn ban(
 
   user
     .user
-    .direct_message(crate::cache_http(&ctx), |m| {
+    .direct_message(cache_http(&ctx), |m| {
       m.add_embed(|e| {
-        e.color(crate::serenity::Color::RED)
+        e.color(serenity::Color::RED)
           .title(format!(
             "Banned from {} by {}",
             ctx
@@ -45,7 +45,7 @@ pub async fn ban(
 }
 
 async fn autocomplete(
-  _ctx: crate::Context<'_>,
+  _ctx: Context<'_>,
   _partial: u32,
 ) -> impl Iterator<Item = poise::AutocompleteChoice<u32>> {
   [

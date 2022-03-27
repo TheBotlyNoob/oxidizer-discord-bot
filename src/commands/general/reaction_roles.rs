@@ -14,10 +14,7 @@ pub(crate) async fn add_reaction_role(
   emoji: String,
   #[description = "The role to add"] role_id: String,
 ) -> Result<()> {
-  let guild = ctx.guild().ok_or(Error {
-    kind: ErrorKind::GuildWasNone,
-    location: get_location!(),
-  })?;
+  let guild = ctx.guild().ok_or(error!(GuildWasNone))?;
   let message_id = message_id.parse::<u64>()?;
   let role_id = role_id.parse::<u64>()?;
 
@@ -32,7 +29,7 @@ pub(crate) async fn add_reaction_role(
       }
     }
     None if emoji.len() == 4 => ReactionType::Unicode(emoji),
-    None => return Err(Box::new(ErrorKind::InvalidEmoji(emoji))),
+    None => return Err(error!(InvalidEmoji, emoji)),
   };
 
   ctx

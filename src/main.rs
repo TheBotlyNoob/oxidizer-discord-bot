@@ -16,32 +16,6 @@ pub(crate) use poise::serenity_prelude as serenity;
 
 pub(crate) mod commands;
 
-pub(crate) struct Data {
-  pub(crate) guild_storage: Mutex<BTreeMap<GuildId, serenity_guild_storage::Storage<String>>>,
-}
-
-impl Data {
-  pub(crate) fn new() -> Self {
-    Self {
-      guild_storage: Mutex::new(BTreeMap::new()),
-    }
-  }
-}
-
-impl Default for Data {
-  fn default() -> Self {
-    Self::new()
-  }
-}
-
-impl Debug for Data {
-  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-    write!(f, "Data {{ guild_storage: {{ ... }} }}")
-  }
-}
-
-pub(crate) type Context<'a> = poise::Context<'a, Data, Error>;
-
 pub(crate) static TESTING: Lazy<bool> =
   Lazy::new(|| env::var("TESTING").is_ok() || cfg!(debug_assertions));
 
@@ -191,8 +165,6 @@ pub(crate) unsafe fn to_owned<T>(x: &T) -> T {
   std::ptr::read(x as *const _)
 }
 
-pub(crate) type Result<T> = std::result::Result<T, Error>;
-
 #[derive(Debug)]
 pub(crate) enum ErrorKind {
   InvalidEmoji(String),
@@ -215,7 +187,6 @@ pub(crate) struct Error {
   location: Option<String>,
   kind: ErrorKind,
 }
-
 impl Display for Error {
   fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
     write!(
@@ -237,15 +208,53 @@ impl StdError for Error {
 }
 
 #[macro_export]
-macro_rules! get_location {
-  () => {
-    format!("{}:{}:{}", file!(), line!(), column!())
+macro_rules! error {
+  ($err:ident) => {
+    $crate::Error {
+      kind: $crate::ErrorKind::$err,
+      location: ::std::option::Option::Some(::std::format!(
+        "{}:{}:{}",
+        ::std::file!(),
+        ::std::line!(),
+        ::std::column!()
+      )),
+    }
   };
 }
 
+pub(crate) struct Data {
+  pub(crate) guild_storage: Mutex<BTreeMap<GuildId, serenity_guild_storage::Storage<String>>>,
+}
+
+impl Data {
+  pub(crate) fn new() -> Self {
+    Self {
+      guild_storage: Mutex::new(BTreeMap::new()),
+    }
+  }
+}
+
+impl Default for Data {
+  fn default() -> Self {
+    Self::new()
+  }
+}
+
+impl Debug for Data {
+  fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    write!(f, "Data {{ guild_storage: {{ ... }} }}")
+  }
+}
+
+pub(crate) type DynError = Box<dyn StdError + Send + Sync>;
+pub(crate) type Context<'a> = poise::Context<'a, Data, DynError>;
+pub(crate) type Result<T> = std::result::Result<T, DynError>;
+
 #[allow(unused_imports)]
 mod command_prelude {
-  pub(crate) use crate::{cache_http, get_location, to_owned, Context, Error, ErrorKind, Result};
+  pub(crate) use crate::{
+    cache_http, error, to_owned, Context, DynError, Error, ErrorKind, Result,
+  };
   pub(crate) use poise::futures_util::{future::join_all, Stream, StreamExt};
   pub(crate) use poise::serenity_prelude as serenity;
   pub(crate) use std::result::Result as StdResult;
